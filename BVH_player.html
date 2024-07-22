@@ -339,14 +339,14 @@
 
              f5.add( BVHanimConfig, 'dance' );
 
-            f5.add( BVHanimConfig, 'speed', 0.1, 1 ).onChange( function() { bvhReader.speed = BVHanimConfig.speed; });;
+            f5.add( BVHanimConfig, 'speed', 0.01, 2 ).onChange( function() { bvhReader.speed = BVHanimConfig.speed; });;
 
             f5.add( BVHanimConfig, 'stop' );
             f5.add( BVHanimConfig, 'play' )
             f5.add( BVHanimConfig, 'next' );
             f5.add( BVHanimConfig, 'prev' );
 
-            f5.add( BVHanimConfig, 'size', 1, 5 ).onChange( function() { bvhReader.reScale(BVHanimConfig.size) });
+            f5.add( BVHanimConfig, 'size', 1, 10 ).onChange( function() { bvhReader.reScale(BVHanimConfig.size) });
             f5.add( BVHanimConfig, 'px', -100, 100 ).onChange( function() { positionBVH() });;
             f5.add( BVHanimConfig, 'py', -100, 100 ).onChange( function() { positionBVH() });;
             f5.add( BVHanimConfig, 'pz', -100, 100 ).onChange( function() { positionBVH() });;
