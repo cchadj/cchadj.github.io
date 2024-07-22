@@ -31,7 +31,7 @@ BVH.Reader = function(){
 
 	this.skeleton = null;
 	this.bones = [];
-	this.boneSize = 1.5;
+	this.boneSize = 0.83;
 
 	this.material = new THREE.MeshNormalMaterial();//new THREE.MeshBasicMaterial({ color:0xffffff });
 
@@ -97,14 +97,18 @@ BVH.Reader.prototype = {
 		this.propertySelect.disabled = false
 
 		this.propertySelect.innerHTML = '<option value="">Select a property</option>';
-		for (const prop in this.motionData) {
-			if (Array.isArray(this.motionData[prop]) && this.motionData[prop].length > 0) {
-				const option = document.createElement('option');
-				option.value = prop;
-				option.textContent = prop;
-				this.propertySelect.appendChild(option);
+		const properties = Object.keys(this.motionData).filter(prop =>
+			Array.isArray(this.motionData[prop]) && this.motionData[prop].length > 0
+		);
+		properties.forEach((prop, index) => {
+			const option = document.createElement('option');
+			option.value = prop;
+			option.textContent = prop;
+			this.propertySelect.appendChild(option);
+			if (index === 0) {
+				this.propertySelect.selectedIndex = 0; // Set the first option as selected
 			}
-		}
+		});
 	},
 	handleFeaturePropertySelect:function(){
 		if (!this.propertySelect){
@@ -393,11 +397,16 @@ BVH.Reader.prototype = {
 			!this.currentFeatureProperty || !this.motionData[this.currentFeatureProperty] || !this.featureBar
 		)
 			return;
-		const value = this.motionData[this.currentFeatureProperty][this.frame];
+
+		let frame_idx = this.frame
+		if (frame_idx >= this.motionData[this.currentFeatureProperty].length) {
+			frame_idx = this.motionData[this.currentFeatureProperty].length - 1
+		}
+
+		const value = this.motionData[this.currentFeatureProperty][frame_idx]
 		const height = value * 100; // Convert 0-1 to 0-100%
 		this.featureBar.style.height = `${height}%`;
 
-		this.valueDisplay.textContent = value.toFixed(2);
 		if (!this.valueDisplay)
 			return;
 		this.valueDisplay.textContent = value.toFixed(2);
@@ -462,6 +471,13 @@ BVH.Reader.prototype = {
 			this.animate();
 		}
     },
+	reset: function (){
+		this.oldFrame = 0;
+		this.frame = 1;
+		this.rePosition(new THREE.Vector3(0, -22, 0))
+		this.animate();
+		this.update()
+	},
     next:function(){
     	this.play = false;
     	this.frame ++;
