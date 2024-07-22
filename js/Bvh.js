@@ -1,4 +1,5 @@
 var BVH = { REVISION:'0.1a'};
+let progressBar, playPauseButton;
 
 BVH.TO_RAD = Math.PI / 180;
 window.URL = window.URL || window.webkitURL;
@@ -33,6 +34,8 @@ BVH.Reader = function(){
 	this.boneSize = 1.5;
 
 	this.material = new THREE.MeshNormalMaterial();//new THREE.MeshBasicMaterial({ color:0xffffff });
+	this.progressBar = null;
+	this.playPauseButton = null;
 }
 
 BVH.Reader.prototype = {
@@ -73,7 +76,12 @@ BVH.Reader.prototype = {
 	    }
 	    xhr.send( null );
     },
+	parseMotionData:function(result){
+		console.log("Motion Data")
+		console.log(result)
+	},
     parseData:function(data){
+		console.log(data)
     	this.data = data;
 		this.channels = [];
 		this.nodes = [];
@@ -105,7 +113,13 @@ BVH.Reader.prototype = {
 		this.getNodeList();
 		this.startTime = Date.now();
 		this.play = true;
-    },
+
+		// Enable UI elements
+		if (this.progressBar) this.progressBar.disabled = false;
+		if (this.playPauseButton) this.playPauseButton.disabled = false;
+		this.togglePlay()
+
+	},
     reScale:function (s) {
     	this.scale = s;
     	this.root.scale.set(this.scale,this.scale,this.scale);
@@ -341,6 +355,17 @@ BVH.Reader.prototype = {
     	}
 
     },
+	updateFeatureBar:function(){
+		if (currentProperty && motionData[currentProperty]) {
+			const value = motionData[currentProperty][currentFrame];
+			const height = value * 100; // Convert 0-1 to 0-100%
+			bar.style.height = `${height}%`;
+
+			valueDisplay.textContent = value.toFixed(2);
+			frameDisplay.textContent = `Frame: ${currentFrame + 1}`;
+			progressBar.value = currentFrame;
+		}
+	},
     matrixRotation:function(Obj, Axe, Angle){
 
     	//this.tmpAngle.push(Angle * BVH.TO_RAD);
@@ -424,3 +449,60 @@ BVH.DistanceTest = function( p1, p2 ){
     if(d<=0)d=0.1;
     return d;
 }
+BVH.Reader.prototype.initUI = function(progressBarId, playPauseButtonId) {
+	this.progressBar = document.getElementById(progressBarId);
+	this.playPauseButton = document.getElementById(playPauseButtonId);
+
+	const self = this;
+	this.progressBar.addEventListener('input', function() {
+		self.gotoFrame(Math.floor(self.progressBar.value * self.numFrames / 100));
+	});
+
+	this.playPauseButton.addEventListener('click', function() {
+		self.togglePlay();
+	});
+}
+BVH.Reader.prototype.gotoFrame = function(frame) {
+	this.frame = frame;
+	this.animate();
+}
+BVH.Reader.prototype.togglePlay = function() {
+
+	// BVHanimConfig.stop = function() {  bvhReader.play = false; };
+	// BVHanimConfig.play = function() { bvhReader.oldFrame = bvhReader.frame; bvhReader.startTime = Date.now(); bvhReader.play = true; };
+	this.play = !this.play;
+	if (this.play) {
+		// this.startTime = Date.now() - (this.frame * this.secsPerFrame * 1000);
+		this.playPauseButton.textContent = 'Pause';
+		this.oldFrame = this.frame;
+		this.startTime = Date.now();
+		this.play = true;
+	} else {
+		this.playPauseButton.textContent = 'Play';
+	}
+}
+BVH.Reader.prototype.update = function(){
+	if ( this.play ) {
+		this.frame = ((((Date.now() - this.startTime) / this.secsPerFrame / 1000) )*this.speed)| 0;
+		if(this.oldFrame!==0)this.frame += this.oldFrame;
+		if(this.frame > this.numFrames ){this.frame = 0;this.oldFrame=0; this.startTime =Date.now() }
+
+		this.animate();
+	}
+
+	// Update progress bar
+	if (this.progressBar) {
+		this.progressBar.value = (this.frame / this.numFrames) * 100;
+	}
+}
+// BVH.Reader.prototype.parseData = function(data){
+//
+// 	debugTell("BVH frame:"+this.numFrames+" s/f:"+this.secsPerFrame + " channels:"+this.channels.length + " node:"+ this.nodes.length);
+// 	this.getNodeList();
+// 	this.startTime = Date.now();
+// 	this.play = true;
+//
+// 	// Enable UI elements
+// 	if (this.progressBar) this.progressBar.disabled = false;
+// 	if (this.playPauseButton) this.playPauseButton.disabled = false;
+// }

@@ -106,9 +106,24 @@
 		}
 
 		function handleFileSelect(evt) {
-		 	var f = evt.target.files[0];
-		 	var reader = new FileReader();
+		 	const f = evt.target.files[0];
+			console.log("OI")
+			console.log(f)
+		 	const reader = new FileReader();
 		 	reader.onload = (function(theFile) {
+
+				const jsonFile = new File([new Blob()], theFile.name.replace(/\.[^/.]+$/, ".json"), {type: "application/json"});
+				const jsonReader = new FileReader();
+				jsonReader.onload = (function() {
+					return function (e) {
+						console.log("HELLO")
+						console.log(e.target)
+						// bvhReader.jsonData = JSON.parse(e.target.result);
+						// bvhReader.parseMotionData(bvhReader.jsonData);
+					}
+				})(jsonFile);
+				jsonReader.readAsText(jsonFile);
+
 		 		return function(e) {
 		 			bvhReader.parseData(e.target.result.split(/\s+/g));
 		 		};
@@ -290,6 +305,7 @@
 
 		function initBVH() {
 			bvhReader = new BVH.Reader();
+			bvhReader.initUI('progressBar', 'playPauseButton');
 			bvhReader.speed = BVHanimConfig.speed;
 
 			loadBVH("action.png");
@@ -320,8 +336,8 @@
 
             BVHanimConfig.dance = function() { loadBVH("dance.png"); };
 
-            BVHanimConfig.stop = function() {  bvhReader.play = false; };
-            BVHanimConfig.play = function() { bvhReader.oldFrame = bvhReader.frame; bvhReader.startTime = Date.now(); bvhReader.play = true; };
+            BVHanimConfig.stop = null
+            BVHanimConfig.play = null
             BVHanimConfig.next = function() { bvhReader.next(); };
             BVHanimConfig.prev = function() { bvhReader.prev(); };
 
@@ -341,8 +357,8 @@
 
             f5.add( BVHanimConfig, 'speed', 0.01, 2 ).onChange( function() { bvhReader.speed = BVHanimConfig.speed; });;
 
-            f5.add( BVHanimConfig, 'stop' );
-            f5.add( BVHanimConfig, 'play' )
+            // f5.add( BVHanimConfig, 'stop' );
+            // f5.add( BVHanimConfig, 'play' )
             f5.add( BVHanimConfig, 'next' );
             f5.add( BVHanimConfig, 'prev' );
 
@@ -509,10 +525,25 @@
 			</div>
 			<input type="file" id="files" />
 		</div>
-		<div id="BVHhubs">
 
+		<div id="BVHhubs">
+			<div id="progress-container">
+				<label for="progressBar"></label><input type="range" id="progressBar" min="0" max="100" value="0" disabled>
+			</div>
+			<button id="playPauseButton" disabled>Play</button>
 		</div>
-		
+
+		<div id="visualization-container">
+			<div id="visualization">
+				<!--			<div id="value-display"></div>-->
+				<div id="bar-container">
+					<div id="bar"></div>
+				</div>
+				<!--			<div id="frame-display"></div>-->
+			</div>
+		</div>
+
+
 		<div id="output1"></div>
 		<div id="output2"></div>
 
