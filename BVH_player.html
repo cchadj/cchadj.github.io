@@ -96,7 +96,8 @@
 
 			debug = document.getElementById("debug");
 
-			document.getElementById('files').addEventListener('change', handleFileSelect, false);
+			document.getElementById('bvh-file').addEventListener('change', handleBvhFileSelect, false);
+			document.getElementById('annotation-file').addEventListener('change', handleAnnotationFileSelect, false);
 
 			addGUI();
 
@@ -105,30 +106,41 @@
 			
 		}
 
-		function handleFileSelect(evt) {
-		 	const f = evt.target.files[0];
-			console.log("OI")
-			console.log(f)
-		 	const reader = new FileReader();
-		 	reader.onload = (function(theFile) {
+		function handleAnnotationFileSelect(evt) {
+			const file = evt.target.files[0];
+			console.log(file)
+			if (!file) {
+				return
+			}
 
-				const jsonFile = new File([new Blob()], theFile.name.replace(/\.[^/.]+$/, ".json"), {type: "application/json"});
-				const jsonReader = new FileReader();
-				jsonReader.onload = (function() {
-					return function (e) {
-						console.log("HELLO")
-						console.log(e.target)
-						// bvhReader.jsonData = JSON.parse(e.target.result);
-						// bvhReader.parseMotionData(bvhReader.jsonData);
-					}
-				})(jsonFile);
-				jsonReader.readAsText(jsonFile);
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				try {
+					const motionData = JSON.parse(e.target.result);
+					bvhReader.parseMotionData(motionData);
+				} catch (error) {
+					alert(`Could not parse motion data ${error}`)
+				}
+			};
+			reader.readAsText(file);
+		}
 
-		 		return function(e) {
-		 			bvhReader.parseData(e.target.result.split(/\s+/g));
-		 		};
-		 	})(f);
-		 	reader.readAsText(f);
+		function handleBvhFileSelect(evt) {
+			const file = evt.target.files[0];
+			console.log(file)
+			if (!file) {
+				return
+			}
+
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				try {
+					const motionData = JSON.parse(e.target.result);
+				} catch (error) {
+					bvhReader.parseData(e.target.result.split(/\s+/g));
+				}
+			};
+			reader.readAsText(file);
 		}
 
 		function debugTell(s) {
@@ -305,7 +317,7 @@
 
 		function initBVH() {
 			bvhReader = new BVH.Reader();
-			bvhReader.initUI('progressBar', 'playPauseButton');
+			bvhReader.initUI('progressBar', 'playPauseButton', "featureBar");
 			bvhReader.speed = BVHanimConfig.speed;
 
 			loadBVH("action.png");
@@ -523,29 +535,41 @@
 			<div id="copy">
 				BVH player <a href="http://3dflashlo.wordpress.com/" target="_blank">&nbsp;&nbsp;&nbsp;loth 2014&nbsp;&nbsp;&nbsp;</a>
 			</div>
-			<input type="file" id="files" />
+			<input type="file" id="bvh-file"/>
 		</div>
 
 		<div id="BVHhubs">
 			<div id="progress-container">
 				<label for="progressBar"></label><input type="range" id="progressBar" min="0" max="100" value="0" disabled>
 			</div>
+
 			<button id="playPauseButton" disabled>Play</button>
 		</div>
 
-		<div id="visualization-container">
+		<div id="annotation-container">
 			<div id="visualization">
-				<!--			<div id="value-display"></div>-->
+				<div id="valueDisplay"></div>
 				<div id="bar-container">
-					<div id="bar"></div>
+					<div id="featureBar"></div>
 				</div>
 				<!--			<div id="frame-display"></div>-->
 			</div>
+
+			<label for="annotation-file" class="custom-file-upload btn">
+				Choose Annotation File
+			</label>
+			<input type="file" id="annotation-file" accept="application/json" />
+
+			<label for="propertySelect">
+				<select id="propertySelect" disabled>
+					<option value="">Select a property</option>
+				</select>
+			</label>
 		</div>
 
 
-		<div id="output1"></div>
-		<div id="output2"></div>
+<!--		<div id="output1"></div>-->
+<!--		<div id="output2"></div>-->
 
 		
 

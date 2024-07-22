@@ -34,8 +34,15 @@ BVH.Reader = function(){
 	this.boneSize = 1.5;
 
 	this.material = new THREE.MeshNormalMaterial();//new THREE.MeshBasicMaterial({ color:0xffffff });
+
 	this.progressBar = null;
 	this.playPauseButton = null;
+
+	this.currentFeatureProperty = null;
+	this.valueDisplay = null;
+	this.propertySelect = null;
+	this.motionData = null;
+	this.featureBar = null;
 }
 
 BVH.Reader.prototype = {
@@ -77,8 +84,34 @@ BVH.Reader.prototype = {
 	    xhr.send( null );
     },
 	parseMotionData:function(result){
-		console.log("Motion Data")
-		console.log(result)
+		this.motionData = result
+		this.populatePropertySelect()
+	},
+	populatePropertySelect:function() {
+		if (!this.propertySelect){
+			console.error("no propertySelect in document tree")
+			return
+		}
+
+		this.propertySelect.addEventListener('change', this.handleFeaturePropertySelect.bind(this));
+		this.propertySelect.disabled = false
+
+		this.propertySelect.innerHTML = '<option value="">Select a property</option>';
+		for (const prop in this.motionData) {
+			if (Array.isArray(this.motionData[prop]) && this.motionData[prop].length > 0) {
+				const option = document.createElement('option');
+				option.value = prop;
+				option.textContent = prop;
+				this.propertySelect.appendChild(option);
+			}
+		}
+	},
+	handleFeaturePropertySelect:function(){
+		if (!this.propertySelect){
+			alert()
+		}
+		this.currentFeatureProperty = this.propertySelect.value;
+		this.updateFeatureBar()
 	},
     parseData:function(data){
 		console.log(data)
@@ -356,15 +389,18 @@ BVH.Reader.prototype = {
 
     },
 	updateFeatureBar:function(){
-		if (currentProperty && motionData[currentProperty]) {
-			const value = motionData[currentProperty][currentFrame];
-			const height = value * 100; // Convert 0-1 to 0-100%
-			bar.style.height = `${height}%`;
+		if (
+			!this.currentFeatureProperty || !this.motionData[this.currentFeatureProperty] || !this.featureBar
+		)
+			return;
+		const value = this.motionData[this.currentFeatureProperty][this.frame];
+		const height = value * 100; // Convert 0-1 to 0-100%
+		this.featureBar.style.height = `${height}%`;
 
-			valueDisplay.textContent = value.toFixed(2);
-			frameDisplay.textContent = `Frame: ${currentFrame + 1}`;
-			progressBar.value = currentFrame;
-		}
+		this.valueDisplay.textContent = value.toFixed(2);
+		if (!this.valueDisplay)
+			return;
+		this.valueDisplay.textContent = value.toFixed(2);
 	},
     matrixRotation:function(Obj, Axe, Angle){
 
@@ -449,9 +485,16 @@ BVH.DistanceTest = function( p1, p2 ){
     if(d<=0)d=0.1;
     return d;
 }
-BVH.Reader.prototype.initUI = function(progressBarId, playPauseButtonId) {
+BVH.Reader.prototype.initUI = function(
+	progressBarId,
+	playPauseButtonId,
+	featureBarId
+) {
 	this.progressBar = document.getElementById(progressBarId);
 	this.playPauseButton = document.getElementById(playPauseButtonId);
+	this.featureBar = document.getElementById(featureBarId);
+	this.propertySelect = document.getElementById("propertySelect")
+	this.valueDisplay = document.getElementById("valueDisplay")
 
 	const self = this;
 	this.progressBar.addEventListener('input', function() {
@@ -465,6 +508,7 @@ BVH.Reader.prototype.initUI = function(progressBarId, playPauseButtonId) {
 BVH.Reader.prototype.gotoFrame = function(frame) {
 	this.frame = frame;
 	this.animate();
+	this.updateFeatureBar()
 }
 BVH.Reader.prototype.togglePlay = function() {
 
@@ -493,6 +537,9 @@ BVH.Reader.prototype.update = function(){
 	// Update progress bar
 	if (this.progressBar) {
 		this.progressBar.value = (this.frame / this.numFrames) * 100;
+	}
+	if (this.featureBar) {
+		this.updateFeatureBar()
 	}
 }
 // BVH.Reader.prototype.parseData = function(data){
