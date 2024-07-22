@@ -471,7 +471,7 @@ BVH.Reader.prototype = {
 			this.animate();
 		}
     },
-	reset: function (){
+	reset:function (){
 		this.oldFrame = 0;
 		this.frame = 1;
 		this.rePosition(new THREE.Vector3(0, -22, 0))
