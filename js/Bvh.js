@@ -404,8 +404,10 @@ class BVHReader {
 
 		const featureValues = this.motionData[this.currentFeatureProperty];
 
-		const min = Math.min(...featureValues);
-		const max = Math.max(...featureValues);
+		// const min = Math.min(...featureValues);
+		const min = 0.0;
+		// const max = Math.max(...featureValues);
+		const max = 1.0;
 		const range = max - min;
 
 		this.graphCanvasCtx.beginPath();
