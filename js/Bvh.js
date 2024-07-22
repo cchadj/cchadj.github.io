@@ -400,7 +400,6 @@ class BVHReader {
 	drawGraph() {
 		const width = this.graphCanvas.width;
 		const height = this.graphCanvas.height;
-		this.graphCanvasCtx.clearRect(0, 0, width, height);
 
 		const featureValues = this.motionData[this.currentFeatureProperty];
 
@@ -409,23 +408,37 @@ class BVHReader {
 		// const max = Math.max(...featureValues);
 		const max = 1.0;
 		const range = max - min;
+		const ctx = this.graphCanvasCtx
+		ctx.clearRect(0, 0, width, height);
 
-		this.graphCanvasCtx.beginPath();
-		this.graphCanvasCtx.strokeStyle = '#4CAF50';
-		this.graphCanvasCtx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.strokeStyle = '#4CAF50';
+		ctx.lineWidth = 2;
 
 		featureValues.forEach((value, index) => {
 			const x = (index / (featureValues.length - 1)) * width;
 			const y = height - ((value - min) / range) * height;
 
 			if (index === 0) {
-				this.graphCanvasCtx.moveTo(x, y);
+				ctx.moveTo(x, y);
 			} else {
-				this.graphCanvasCtx.lineTo(x, y);
+				ctx.lineTo(x, y);
 			}
 		});
 
-		this.graphCanvasCtx.stroke();
+		// Add y-axis labels
+		ctx.font = '18px Arial';
+		ctx.fillStyle = 'black';
+		ctx.textAlign = 'right';
+		ctx.textBaseline = 'middle';
+
+		// Label for maximum value (1)
+		ctx.fillText('1', 14, 10);
+
+		// Label for minimum value (0)
+		ctx.fillText('0', 14, height - 10);
+
+		ctx.stroke();
 	}
 
 	updateGraphMarker() {
