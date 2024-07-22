@@ -448,16 +448,45 @@ class BVHReader {
 		const featureData = this.motionData[this.currentFeatureProperty];
 		const x = (this.frame / (featureData.length - 1)) * this.graphCanvas.width;
 		const ctx = this.graphCanvasCtx;
+		const canvasHeight = this.graphCanvas.height;
+
+		const min = 0;
+		const max = 1;
+		const value = this.motionData[this.currentFeatureProperty][this.frame];
+
+		const range = max - min;
 
 		ctx.clearRect(0, 0, this.graphCanvas.width, this.graphCanvas.height);
 
 		this.drawGraph();
 
+
+		ctx.beginPath();
+		// Add y-axis labels
+		ctx.font = '18px Arial';
+		ctx.fillStyle = 'white';
+		ctx.textAlign = 'right';
+		ctx.textBaseline = 'middle';
+
+
+		const y = canvasHeight - ((value - min) / range) * canvasHeight;
+		let letterHeight = y  - 15;
+		if ( y > canvasHeight ) {
+			letterHeight = y  + 25;
+		}
+		else if ( y <= 0 ) {
+			letterHeight = y - 25;
+		}
+		// Label for maximum value (1)
+		ctx.fillText(value.toPrecision(2), x, letterHeight);
+		ctx.stroke();
+
+
 		ctx.beginPath();
 		ctx.strokeStyle = 'red';
 		ctx.lineWidth = 2;
 		ctx.moveTo(x, 0);
-		ctx.lineTo(x, this.graphCanvas.height);
+		ctx.lineTo(x, canvasHeight);
 		ctx.stroke();
 	}
 
