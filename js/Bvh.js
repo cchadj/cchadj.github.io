@@ -1,103 +1,106 @@
-var BVH = { REVISION:'0.1a'};
+const BVH = { REVISION: '0.1a' };
 let progressBar, playPauseButton;
 
 BVH.TO_RAD = Math.PI / 180;
 window.URL = window.URL || window.webkitURL;
 
-BVH.Reader = function(){
-	this.debug = true;
-	this.type = "";
-	this.data = null;
-	this.root = null;
-	this.numFrames = 0;
-	this.secsPerFrame = 0;
-	this.play = false;
-	this.channels = null;
-	this.lines = "";
-	
-	this.speed = 1;
+class BVHReader {
+	constructor() {
+		this.debug = true;
+		this.type = "";
+		this.data = null;
+		this.root = null;
+		this.numFrames = 0;
+		this.secsPerFrame = 0;
+		this.play = false;
+		this.channels = null;
+		this.lines = "";
 
-	this.nodes = null;
-	
-	this.frame = 0;
-	this.oldFrame = 0;
-	this.startTime = 0;
-	
-	this.position = new THREE.Vector3( 0, 0, 0 );
-	this.scale = 1;
+		this.speed = 1;
 
-	this.tmpOrder = "";
-	this.tmpAngle = [];
+		this.nodes = null;
 
-	this.skeleton = null;
-	this.bones = [];
-	this.boneSize = 0.83;
+		this.frame = 0;
+		this.oldFrame = 0;
+		this.startTime = 0;
 
-	this.material = new THREE.MeshNormalMaterial();//new THREE.MeshBasicMaterial({ color:0xffffff });
+		this.position = new THREE.Vector3(0, 0, 0);
+		this.scale = 1;
 
-	this.progressBar = null;
-	this.playPauseButton = null;
+		this.tmpOrder = "";
+		this.tmpAngle = [];
 
-	this.currentFeatureProperty = null;
-	this.valueDisplay = null;
-	this.propertySelect = null;
-	this.motionData = null;
-	this.featureBar = null;
+		this.skeleton = null;
+		this.bones = [];
+		this.boneSize = 0.83;
 
-	this.graphCanvas = document.getElementById('graphCanvas');
-	this.graphCanvasCtx = this.graphCanvas.getContext('2d');
-}
+		this.material = new THREE.MeshNormalMaterial();
 
-BVH.Reader.prototype = {
-    constructor: BVH.Reader,
+		this.progressBar = null;
+		this.playPauseButton = null;
 
-    load:function(fname){
-    	this.type = fname.substring(fname.length-3,fname.length);
+		this.currentFeatureProperty = null;
+		this.valueDisplay = null;
+		this.propertySelect = null;
+		this.motionData = null;
+		this.featureBar = null;
 
-    	var _this = this;
-		var xhr = new XMLHttpRequest();
-		xhr.open( 'GET', fname, true );
+		this.graphCanvas = document.getElementById('graphCanvas');
+		this.graphCanvasCtx = this.graphCanvas.getContext('2d');
+	}
 
-		if(this.type === 'bvh'){ // direct from file
-			xhr.onreadystatechange = function(){ if ( this.readyState == 4 ){ _this.parseData(this.responseText.split(/\s+/g));}};			
-	    } else if(this.type === 'png'){ // from png compress
-	    	xhr.responseType = 'blob';
-	    	xhr.onload = function(e) {
-	    		if (this.readyState == 4 ) {//if (this.status == 200) {
-		    		var blob = this.response;
-		    		var img = document.createElement('img');
-		    		img.onload = function(e) {
-		    			var c=document.createElement("canvas"), r='', pix, i, string = "";
-		    			c.width = this.width;
-		    			c.height = this.height;
-		    			c.getContext('2d').drawImage(this, 0, 0);
-		    			var d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-		    			for ( i = 0, l=d.length; i<l; i+=4){
+	load(fname) {
+		this.type = fname.substring(fname.length - 3, fname.length);
+
+		const xhr = new XMLHttpRequest();
+		xhr.open('GET', fname, true);
+
+		if (this.type === 'bvh') {
+			xhr.onreadystatechange = () => {
+				if (xhr.readyState == 4) {
+					this.parseData(xhr.responseText.split(/\s+/g));
+				}
+			};
+		} else if (this.type === 'png') {
+			xhr.responseType = 'blob';
+			xhr.onload = () => {
+				if (xhr.readyState === 4) {
+					const blob = xhr.response;
+					const img = document.createElement('img');
+					img.onload = () => {
+						let c = document.createElement("canvas"), r = '', pix, i, string = "";
+						c.width = img.width;
+						c.height = img.height;
+						c.getContext('2d').drawImage(img, 0, 0);
+						const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+						for (i = 0, l = d.length; i < l; i += 4) {
 							pix = d[i];
-							if( pix<96 ) string += String.fromCharCode(pix+32);
+							if (pix < 96) string += String.fromCharCode(pix + 32);
 						}
-						var array = string.split(",");
-						_this.parseData(array);
-		    		    window.URL.revokeObjectURL(img.src); // Clean up after yourself.
-		    		}
-		    		img.src = window.URL.createObjectURL(blob);
-		    	}
-	    	}
-	    }
-	    xhr.send( null );
-    },
-	parseMotionData:function(result){
-		this.motionData = result
-		this.populatePropertySelect()
-	},
-	populatePropertySelect:function() {
-		if (!this.propertySelect){
-			console.error("no propertySelect in document tree")
-			return
+						const array = string.split(",");
+						this.parseData(array);
+						window.URL.revokeObjectURL(img.src);
+					};
+					img.src = window.URL.createObjectURL(blob);
+				}
+			};
+		}
+		xhr.send(null);
+	}
+
+	parseMotionData(result) {
+		this.motionData = result;
+		this.populatePropertySelect();
+	}
+
+	populatePropertySelect() {
+		if (!this.propertySelect) {
+			console.error("no propertySelect in document tree");
+			return;
 		}
 
 		this.propertySelect.addEventListener('change', this.handleFeaturePropertySelect.bind(this));
-		this.propertySelect.disabled = false
+		this.propertySelect.disabled = false;
 
 		this.propertySelect.innerHTML = '<option value="">Select a property</option>';
 		const properties = Object.keys(this.motionData).filter(prop =>
@@ -109,197 +112,186 @@ BVH.Reader.prototype = {
 			option.textContent = prop;
 			this.propertySelect.appendChild(option);
 			if (index === 0) {
-				this.propertySelect.selectedIndex = 0; // Set the first option as selected
+				this.propertySelect.selectedIndex = 0;
 			}
 		});
-	},
-	handleFeaturePropertySelect:function(){
-		if (!this.propertySelect){
-			alert()
+	}
+
+	handleFeaturePropertySelect() {
+		if (!this.propertySelect) {
+			alert();
 		}
 		this.currentFeatureProperty = this.propertySelect.value;
-		this.updateFeatureBar()
-		this.drawGraph()
-	},
-    parseData:function(data){
-		console.log(data)
-    	this.data = data;
+		this.updateFeatureBar();
+		this.drawGraph();
+	}
+
+	parseData(data) {
+		console.log(data);
+		this.data = data;
 		this.channels = [];
 		this.nodes = [];
-		var done = false;
+		let done = false;
 		while (!done) {
 			switch (this.data.shift()) {
-			case 'ROOT':
-			    if(this.root !== null) this.clearNode();
+				case 'ROOT':
+					if (this.root !== null) this.clearNode();
 
-				this.root = this.parseNode(this.data);
-				this.root.position.copy(this.position);
-				this.root.scale.set(this.scale,this.scale,this.scale);
+					this.root = this.parseNode(this.data);
+					this.root.position.copy(this.position);
+					this.root.scale.set(this.scale, this.scale, this.scale);
 
-				if(this.debug){
-					this.addSkeleton( this.nodes.length );
-				}
-				break;
-			case 'MOTION':
-				this.data.shift();
-				this.numFrames = parseInt( this.data.shift() );
-				this.data.shift();
-				this.data.shift();
-				this.secsPerFrame = parseFloat(this.data.shift());
-				done = true;
+					if (this.debug) {
+						this.addSkeleton(this.nodes.length);
+					}
+					break;
+				case 'MOTION':
+					this.data.shift();
+					this.numFrames = parseInt(this.data.shift());
+					this.data.shift();
+					this.data.shift();
+					this.secsPerFrame = parseFloat(this.data.shift());
+					done = true;
 			}
 		}
 
-		debugTell("BVH frame:"+this.numFrames+" s/f:"+this.secsPerFrame + " channels:"+this.channels.length + " node:"+ this.nodes.length);
 		this.getNodeList();
 		this.startTime = Date.now();
 		this.play = true;
 
-		// Enable UI elements
 		if (this.progressBar) this.progressBar.disabled = false;
 		if (this.playPauseButton) this.playPauseButton.disabled = false;
-		this.togglePlay()
+		this.togglePlay();
+	}
 
-	},
-    reScale:function (s) {
-    	this.scale = s;
-    	this.root.scale.set(this.scale,this.scale,this.scale);
-    },
-    rePosition:function (v) {
-    	this.position = v;
-    	this.root.position.copy(this.position);
-    },
-    getNodeList:function () {
-    	var n = this.nodes.length, node, s = "";
-    	for(var i=0; i<n; i++){
-    		node = this.nodes[i];
-    		s += node.name + " _ "+ i +"<br>"//+" _ "+node.parent.name +" _ "+node.children[0].name+"<br>";
-    	}
-    	if(out2)out2.innerHTML = s;
-    },
+	reScale(s) {
+		this.scale = s;
+		this.root.scale.set(this.scale, this.scale, this.scale);
+	}
 
+	rePosition(v) {
+		this.position = v;
+		this.root.position.copy(this.position);
+	}
 
-    addSkeleton:function ( n ) {
-    	this.skeleton = new THREE.Object3D();
-    	this.bones = [];
+	getNodeList() {
+		let n = this.nodes.length;
+		let s = "";
+		for (let i = 0; i < n; i++) {
+			const node = this.nodes[i];
+			s += node.name + " _ " + i + "<br>";
+		}
+		if (out2) out2.innerHTML = s;
+	}
 
-    	var n = this.nodes.length, node, bone;
-    	//var geo = new THREE.CubeGeometry( 0.2, 0.2, 10 );//new THREE.Geometry();
-    	var geo = new THREE.CubeGeometry( this.boneSize, this.boneSize, 1);
-    	//geo.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, 6 ) );
-    	geo.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, 0.5 ) );
-    	//var mat = new THREE.MeshNormalMaterial();
+	addSkeleton(n) {
+		this.skeleton = new THREE.Object3D();
+		this.bones = [];
 
-    	for(var i=0; i<n; i++){
-    		node = this.nodes[i];
-    		if ( node.name !== 'Site' ){
-    			bone = new THREE.Mesh(geo, this.material);
-    			bone.castShadow = true;
-    			bone.rotation.order = 'XYZ';
-	    		bone.name = node.name;
-	    		this.skeleton.add(bone);
-	    		this.bones[i] = bone;
-    	    }
-    	}
-    	scene.add( this.skeleton );
+		const geo = new THREE.CubeGeometry(this.boneSize, this.boneSize, 1);
+		geo.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, 0.5));
 
-    },
-    updateSkeleton:function (  ) {
-    	var mtx, node, bone;
-    	var n = this.nodes.length;
-    	var target;
-    	for(var i=0; i<n; i++){
-    		node = this.nodes[i];
-    		bone = this.bones[i];
+		for (let i = 0; i < this.nodes.length; i++) {
+			const node = this.nodes[i];
+			if (node.name !== 'Site') {
+				const bone = new THREE.Mesh(geo, this.material);
+				bone.castShadow = true;
+				bone.rotation.order = 'XYZ';
+				bone.name = node.name;
+				this.skeleton.add(bone);
+				this.bones[i] = bone;
+			}
+		}
+		scene.add(this.skeleton);
+	}
 
-    		if ( node.name !== 'Site' ){
-	    		mtx = node.matrixWorld;
-	    		bone.position.setFromMatrixPosition( mtx );
-	    		//this.skeletonBones[i].rotation.setFromRotationMatrix( mtx );
-	    		if(node.children.length){
-	    			target = new THREE.Vector3().setFromMatrixPosition( node.children[0].matrixWorld );
-	    			bone.lookAt(target);
-	    			bone.rotation.z = 0;
+	updateSkeleton() {
+		for (let i = 0; i < this.nodes.length; i++) {
+			const node = this.nodes[i];
+			const bone = this.bones[i];
 
-	    			if(bone.name==="Head")bone.scale.set(this.boneSize*2,this.boneSize*2,BVH.DistanceTest(bone.position, target)*(this.boneSize*1.5));
-	    			else bone.scale.set(this.boneSize,this.boneSize,BVH.DistanceTest(bone.position, target));
-	    		}
-	    		/*if(node.parent){
-	    			target = new THREE.Vector3().setFromMatrixPosition( node.parent.matrixWorld );
-	    			this.skeletonBones[i].lookAt(target);
-	    		}*/
-	    	}
-    	}
-    },
-	transposeName:function(name){
-		if(name==="hip") name = "Hips";
-		if(name==="abdomen") name = "Spine1";
-		if(name==="chest") name = "Chest";
-		if(name==="neck") name = "Neck";
-		if(name==="head") name = "Head";
-		if(name==="lCollar") name = "LeftCollar";
-		if(name==="rCollar") name = "RightCollar";
-		if(name==="lShldr") name = "LeftUpArm";
-		if(name==="rShldr") name = "RightUpArm";
-		if(name==="lForeArm") name = "LeftLowArm";
-		if(name==="rForeArm") name = "RightLowArm";
-		if(name==="lHand") name = "LeftHand";
-		if(name==="rHand") name = "RightHand";
-		if(name==="lFoot") name = "LeftFoot";
-		if(name==="rFoot") name = "RightFoot";
-		if(name==="lThigh") name = "LeftUpLeg";
-		if(name==="rThigh") name = "RightUpLeg";
-		if(name==="lShin") name = "RightLowLeg";
-		if(name==="rShin") name = "LeftLowLeg";
+			if (node.name !== 'Site') {
+				const mtx = node.matrixWorld;
+				bone.position.setFromMatrixPosition(mtx);
+				if (node.children.length) {
+					const target = new THREE.Vector3().setFromMatrixPosition(node.children[0].matrixWorld);
+					bone.lookAt(target);
+					bone.rotation.z = 0;
 
-		// leg
-		if(name==="RightHip") name = "RightUpLeg";
-		if(name==="LeftHip") name = "LeftUpLeg";
-		if(name==="RightKnee") name = "RightLowLeg";
-		if(name==="LeftKnee") name = "LeftLowLeg";
-		if(name==="RightAnkle") name = "RightFoot";
-		if(name==="LeftAnkle") name = "LeftFoot";
-		// arm
-		if(name==="RightShoulder") name = "RightUpArm";
-		if(name==="LeftShoulder") name = "LeftUpArm";
-		if(name==="RightElbow") name = "RightLowArm";
-		if(name==="LeftElbow") name = "LeftLowArm";
-		if(name==="RightWrist") name = "RightHand";
-		if(name==="LeftWrist") name = "LeftHand";
+					if (bone.name === "Head") {
+						bone.scale.set(this.boneSize * 2, this.boneSize * 2, BVH.DistanceTest(bone.position, target) * (this.boneSize * 1.5));
+					} else {
+						bone.scale.set(this.boneSize, this.boneSize, BVH.DistanceTest(bone.position, target));
+					}
+				}
+			}
+		}
+	}
 
-		if(name==="rcollar") name = "RightCollar";
-		if(name==="lcollar") name = "LeftCollar";
+	transposeName(name) {
+		const nameMap = {
+			"hip": "Hips",
+			"abdomen": "Spine1",
+			"chest": "Chest",
+			"neck": "Neck",
+			"head": "Head",
+			"lCollar": "LeftCollar",
+			"rCollar": "RightCollar",
+			"lShldr": "LeftUpArm",
+			"rShldr": "RightUpArm",
+			"lForeArm": "LeftLowArm",
+			"rForeArm": "RightLowArm",
+			"lHand": "LeftHand",
+			"rHand": "RightHand",
+			"lFoot": "LeftFoot",
+			"rFoot": "RightFoot",
+			"lThigh": "LeftUpLeg",
+			"rThigh": "RightUpLeg",
+			"lShin": "RightLowLeg",
+			"rShin": "LeftLowLeg",
+			"RightHip": "RightUpLeg",
+			"LeftHip": "LeftUpLeg",
+			"RightKnee": "RightLowLeg",
+			"LeftKnee": "LeftLowLeg",
+			"RightAnkle": "RightFoot",
+			"LeftAnkle": "LeftFoot",
+			"RightShoulder": "RightUpArm",
+			"LeftShoulder": "LeftUpArm",
+			"RightElbow": "RightLowArm",
+			"LeftElbow": "LeftLowArm",
+			"RightWrist": "RightHand",
+			"LeftWrist": "LeftHand",
+			"rcollar": "RightCollar",
+			"lcollar": "LeftCollar",
+			"rtoes": "RightToe",
+			"ltoes": "LeftToe",
+			"upperback": "Spine1"
+		};
+		return nameMap[name] || name;
+	}
 
-		if(name==="rtoes") name = "RightToe";
-		if(name==="ltoes") name = "LeftToe";
-
-		if(name==="upperback") name = "Spine1";
-		
-		return name;
-	},
-    parseNode:function(data){
-    	var name, done, n, node, t;
-		name = data.shift();
+	parseNode(data) {
+		let name = data.shift();
 		name = this.transposeName(name);
-		node = new THREE.Object3D();
+		const node = new THREE.Object3D();
 		node.name = name;
 
-		done = false;
-		while ( !done ) {
-			switch ( t = data.shift()) {
+		let done = false;
+		while (!done) {
+			switch (data.shift()) {
 				case 'OFFSET':
-					node.position.set( parseFloat( data.shift() ), parseFloat( data.shift() ), parseFloat( data.shift() ) );
+					node.position.set(parseFloat(data.shift()), parseFloat(data.shift()), parseFloat(data.shift()));
 					node.offset = node.position.clone();
 					break;
 				case 'CHANNELS':
-					n = parseInt( data.shift() );
-					for ( var i = 0;  0 <= n ? i < n : i > n;  0 <= n ? i++ : i-- ) { 
+					const n = parseInt(data.shift());
+					for (let i = 0; i < n; i++) {
 						this.channels.push({ node: node, prop: data.shift() });
 					}
 					break;
 				case 'JOINT':
 				case 'End':
-					node.add( this.parseNode(data) );
+					node.add(this.parseNode(data));
 					break;
 				case '}':
 					done = true;
@@ -307,207 +299,115 @@ BVH.Reader.prototype = {
 		}
 		this.nodes.push(node);
 		return node;
-    },
-    clearNode:function(){
-    	var i;
-    	if(out2)out2.innerHTML = "";
+	}
 
-    	if(this.nodes){
+	clearNode() {
+		if (out2) out2.innerHTML = "";
 
-	    	for (i=0; i<this.nodes.length; i++){
+		if (this.nodes) {
+			for (let i = 0; i < this.nodes.length; i++) {
 				this.nodes[i] = null;
 			}
 			this.nodes.length = 0;
 
-			if(this.bones.length > 0){
-		    	for ( i=0; i<this.bones.length; i++){
-					if(this.bones[i]){
+			if (this.bones.length > 0) {
+				for (let i = 0; i < this.bones.length; i++) {
+					if (this.bones[i]) {
 						this.bones[i].geometry.dispose();
 					}
 				}
 				this.bones.length = 0;
-		        scene.remove( this.skeleton );
-		   }
+				scene.remove(this.skeleton);
+			}
 		}
-    },
-    animate:function(){
-    	// debugTell("frame" +  this.frame);
-    	var ch;
-		var n =  this.frame % this.numFrames * this.channels.length;
-		var ref = this.channels;
-		var isRoot = false;
+	}
 
-		for ( var i = 0, len = ref.length; i < len; i++) {
-			ch = ref[ i ];
-			if(ch.node.name === "Hips") isRoot = true;
+	animate() {
+		let n = this.frame % this.numFrames * this.channels.length;
+		const ref = this.channels;
+		let isRoot = false;
+
+		for (let i = 0; i < ref.length; i++) {
+			const ch = ref[i];
+			if (ch.node.name === "Hips") isRoot = true;
 			else isRoot = false;
 
-
-			switch ( ch.prop ) {
+			switch (ch.prop) {
 				case 'Xrotation':
-				    this.autoDetectRotation(ch.node, "X", parseFloat(this.data[n]));
-					//ch.node.rotation.x = (parseFloat(this.data[n])) * BVH.TO_RAD;
+					this.autoDetectRotation(ch.node, "X", parseFloat(this.data[n]));
 					break;
 				case 'Yrotation':
-				    this.autoDetectRotation(ch.node, "Y", parseFloat(this.data[n]));
-					//ch.node.rotation.y = (parseFloat(this.data[n])) * BVH.TO_RAD;
+					this.autoDetectRotation(ch.node, "Y", parseFloat(this.data[n]));
 					break;
 				case 'Zrotation':
-				    this.autoDetectRotation(ch.node, "Z", parseFloat(this.data[n]));
-					//ch.node.rotation.z = (parseFloat(this.data[n])) * BVH.TO_RAD;
+					this.autoDetectRotation(ch.node, "Z", parseFloat(this.data[n]));
 					break;
 				case 'Xposition':
-				    if(isRoot) ch.node.position.x = ch.node.offset.x + parseFloat(this.data[n])+ this.position.x;
+					if (isRoot) ch.node.position.x = ch.node.offset.x + parseFloat(this.data[n]) + this.position.x;
 					else ch.node.position.x = ch.node.offset.x + parseFloat(this.data[n]);
 					break;
 				case 'Yposition':
-				    if(isRoot) ch.node.position.y = ch.node.offset.y + parseFloat(this.data[n])+ this.position.y;
+					if (isRoot) ch.node.position.y = ch.node.offset.y + parseFloat(this.data[n]) + this.position.y;
 					else ch.node.position.y = ch.node.offset.y + parseFloat(this.data[n]);
 					break;
 				case 'Zposition':
-				    if(isRoot) ch.node.position.z = ch.node.offset.z + parseFloat(this.data[n])+ this.position.z;
+					if (isRoot) ch.node.position.z = ch.node.offset.z + parseFloat(this.data[n]) + this.position.z;
 					else ch.node.position.z = ch.node.offset.z + parseFloat(this.data[n]);
-				break;
+					break;
 			}
 
 			n++;
 		}
 
-		if(this.bones.length > 0) this.updateSkeleton();
-		
-    },
-    autoDetectRotation:function(Obj, Axe, Angle){
+		if (this.bones.length > 0) this.updateSkeleton();
+	}
 
-    	this.tmpOrder+=Axe;
-    	var angle = Angle * BVH.TO_RAD;
+	autoDetectRotation(Obj, Axe, Angle) {
+		this.tmpOrder += Axe;
+		const angle = Angle * BVH.TO_RAD;
 
-    	if(Axe === "X")this.tmpAngle[0] = angle;
-    	else if(Axe === "Y")this.tmpAngle[1] = angle;
-    	else this.tmpAngle[2] = angle;
+		if (Axe === "X") this.tmpAngle[0] = angle;
+		else if (Axe === "Y") this.tmpAngle[1] = angle;
+		else this.tmpAngle[2] = angle;
 
-    	if(this.tmpOrder.length===3){
-    		var e = new THREE.Euler( this.tmpAngle[0], this.tmpAngle[1], this.tmpAngle[2], this.tmpOrder );
-    		Obj.setRotationFromEuler(e);
+		if (this.tmpOrder.length === 3) {
+			const e = new THREE.Euler(this.tmpAngle[0], this.tmpAngle[1], this.tmpAngle[2], this.tmpOrder);
+			Obj.setRotationFromEuler(e);
 
-    		Obj.updateMatrixWorld();
+			Obj.updateMatrixWorld();
 
-    		this.tmpOrder = "";
-    		this.tmpAngle.length = 0;
-    	}
+			this.tmpOrder = "";
+			this.tmpAngle.length = 0;
+		}
+	}
 
-    },
-	updateFeatureBar:function(){
-		if (
-			!this.currentFeatureProperty || !this.motionData[this.currentFeatureProperty] || !this.featureBar
-		)
-			return;
+	updateFeatureBar() {
+		if (!this.currentFeatureProperty || !this.motionData[this.currentFeatureProperty] || !this.featureBar) return;
 
-		let frame_idx = this.frame
+		let frame_idx = this.frame;
 		if (frame_idx >= this.motionData[this.currentFeatureProperty].length) {
-			frame_idx = this.motionData[this.currentFeatureProperty].length - 1
+			frame_idx = this.motionData[this.currentFeatureProperty].length - 1;
 		}
 
-		const value = this.motionData[this.currentFeatureProperty][frame_idx]
-		const height = value * 100; // Convert 0-1 to 0-100%
+		const value = this.motionData[this.currentFeatureProperty][frame_idx];
+		const height = value * 100;
 		this.featureBar.style.height = `${height}%`;
 
-		if (!this.valueDisplay)
-			return;
+		if (!this.valueDisplay) return;
 		this.valueDisplay.textContent = value.toFixed(2);
-	},
-    matrixRotation:function(Obj, Axe, Angle){
+	}
 
-    	//this.tmpAngle.push(Angle * BVH.TO_RAD);
-
-
-    	//Obj.rotation[Axe] =  Angle * BVH.TO_RAD;
-    	//Obj.rotationAutoUpdate = false;
-    	//Obj.matrix.matrixAutoUpdate = false;
-
-    	
-    	/*var axis = new THREE.Vector3( 0, 0, 0 );
-    	if(Axe === "x") axis.x = 1;
-    	else if (Axe === "y") axis.y = 1;
-    	else axis.z = 1;
-
-    	axis.normalize();
-    	*/
-
-
-    	/*var quat = new THREE.Quaternion();
-    	quat.setFromAxisAngle(axis,angle);
-    	var vector = axis.clone();//new THREE.Vector3( 1, 0, 0 );
-        vector.applyQuaternion( quat )
-
-    	//Obj.rotateOnAxis(axe.normalize(), angle);
-
-    	// world axes
-    	//Obj.quaternion.multiplyQuaternions(quat,Obj.quaternion);
-
-    	Obj.lookAt(vector);*/
-        // body axes
-        //Obj.quaternion.multiply(quat);
-
-        //Obj.quaternion = quat;
-
-    	/*var mtx = Obj.matrix.clone();
-
-    	Obj.applyMatrix()
-    	//mtx.extractRotation()
-    	var mtx2 = Obj.matrix.clone();
-    	mtx.matrixAutoUpdate = false;
-    	mtx2.matrixAutoUpdate = false;
-    	mtx.makeRotationAxis(axe.normalize(), angle);
-    	Obj.matrixAutoUpdate = false;
-
-    	Obj.matrix.multiplyMatrices(mtx, mtx2); 
-    		Obj.matrixAutoUpdate = true;*/
-
-    	//Obj.rotation.setFromRotationMatrix( mtx );
-
-    },
-    update:function(){
-    	if ( this.play ) { 
-			this.frame = ((((Date.now() - this.startTime) / this.secsPerFrame / 1000) )*this.speed)| 0;
-			if(this.oldFrame!==0)this.frame += this.oldFrame;
-			if(this.frame > this.numFrames ){this.frame = 0;this.oldFrame=0; this.startTime =Date.now() }
-
-			this.animate();
-		}
-    },
-	reset:function (){
-		this.oldFrame = 0;
-		this.frame = 1;
-		this.rePosition(new THREE.Vector3(0, -22, 0))
-		this.animate();
-		this.update()
-	},
-    next:function(){
-    	this.play = false;
-    	this.frame ++;
-    	if(this.frame > this.numFrames )this.frame = 0;
-    	this.animate();
-    },
-    prev:function(){
-    	this.play = false;
-    	this.frame --;
-    	if(this.frame<0)this.frame = this.numFrames;
-    	this.animate();
-    },
-	drawGraph:function() {
-
+	drawGraph() {
 		const width = this.graphCanvas.width;
 		const height = this.graphCanvas.height;
 		this.graphCanvasCtx.clearRect(0, 0, width, height);
 
-		const featureValues =  this.motionData[this.currentFeatureProperty]
+		const featureValues = this.motionData[this.currentFeatureProperty];
 
-		// Find min and max values for scaling
 		const min = Math.min(...featureValues);
 		const max = Math.max(...featureValues);
 		const range = max - min;
 
-		// Draw the line
 		this.graphCanvasCtx.beginPath();
 		this.graphCanvasCtx.strokeStyle = '#4CAF50';
 		this.graphCanvasCtx.lineWidth = 2;
@@ -524,107 +424,113 @@ BVH.Reader.prototype = {
 		});
 
 		this.graphCanvasCtx.stroke();
-	},
-	updateGraphMarker:function() {
-		const currentFrame = this.frame;
-		const yourBVHData = this.motionData[this.currentFeatureProperty]
-		const graphCanvas = this.graphCanvas
-		const x = (currentFrame / (yourBVHData.length - 1)) * graphCanvas.width;
-		const ctx = this.graphCanvasCtx
+	}
 
-		// Clear previous marker
-		ctx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+	updateGraphMarker() {
+		if (!this.currentFeatureProperty || !this.motionData || !this.motionData[this.currentFeatureProperty]){
+			return;
+		}
+		const featureData = this.motionData[this.currentFeatureProperty];
+		const x = (this.frame / (featureData.length - 1)) * this.graphCanvas.width;
+		const ctx = this.graphCanvasCtx;
 
-		// Redraw the graph
+		ctx.clearRect(0, 0, this.graphCanvas.width, this.graphCanvas.height);
+
 		this.drawGraph();
 
-		// Draw the marker
 		ctx.beginPath();
 		ctx.strokeStyle = 'red';
 		ctx.lineWidth = 2;
 		ctx.moveTo(x, 0);
-		ctx.lineTo(x, graphCanvas.height);
+		ctx.lineTo(x, this.graphCanvas.height);
 		ctx.stroke();
 	}
-}
 
-BVH.DistanceTest = function( p1, p2 ){
-    var x = p2.x-p1.x;
-    var y = p2.y-p1.y;
-    var z = p2.z-p1.z;
-    var d = Math.sqrt(x*x + y*y + z*z);
-    if(d<=0)d=0.1;
-    return d;
-}
-BVH.Reader.prototype.initUI = function(
-	progressBarId,
-	playPauseButtonId,
-	featureBarId
-) {
-	this.progressBar = document.getElementById(progressBarId);
-	this.playPauseButton = document.getElementById(playPauseButtonId);
-	this.featureBar = document.getElementById(featureBarId);
-	this.propertySelect = document.getElementById("propertySelect")
-	this.valueDisplay = document.getElementById("valueDisplay")
-
-	const self = this;
-	this.progressBar.addEventListener('input', function() {
-		self.gotoFrame(Math.floor(self.progressBar.value * self.numFrames / 100));
-	});
-
-	this.playPauseButton.addEventListener('click', function() {
-		self.togglePlay();
-	});
-}
-BVH.Reader.prototype.gotoFrame = function(frame) {
-	this.frame = frame;
-	this.animate();
-	this.updateFeatureBar()
-	this.update()
-}
-BVH.Reader.prototype.togglePlay = function() {
-
-	// BVHanimConfig.stop = function() {  bvhReader.play = false; };
-	// BVHanimConfig.play = function() { bvhReader.oldFrame = bvhReader.frame; bvhReader.startTime = Date.now(); bvhReader.play = true; };
-	this.play = !this.play;
-	if (this.play) {
-		// this.startTime = Date.now() - (this.frame * this.secsPerFrame * 1000);
-		this.playPauseButton.textContent = 'Pause';
-		this.oldFrame = this.frame;
-		this.startTime = Date.now();
-		this.play = true;
-	} else {
-		this.playPauseButton.textContent = 'Play';
+	reset() {
+		this.oldFrame = 0;
+		this.frame = 1;
+		this.rePosition(new THREE.Vector3(0, -22, 0));
+		this.animate();
+		this.update();
 	}
-}
-BVH.Reader.prototype.update = function(){
-	if ( this.play ) {
-		this.frame = ((((Date.now() - this.startTime) / this.secsPerFrame / 1000) )*this.speed)| 0;
-		if(this.oldFrame!==0)this.frame += this.oldFrame;
-		if(this.frame > this.numFrames ){this.frame = 0;this.oldFrame=0; this.startTime =Date.now() }
 
+	next() {
+		this.play = false;
+		this.frame++;
+		if (this.frame > this.numFrames) this.frame = 0;
 		this.animate();
 	}
 
-	// Update progress bar
-	if (this.progressBar) {
-		this.progressBar.value = (this.frame / this.numFrames) * 100;
+	prev() {
+		this.play = false;
+		this.frame--;
+		if (this.frame < 0) this.frame = this.numFrames;
+		this.animate();
 	}
-	if (this.featureBar) {
-		this.updateFeatureBar()
+
+	initUI(progressBarId, playPauseButtonId, featureBarId) {
+		this.progressBar = document.getElementById(progressBarId);
+		this.playPauseButton = document.getElementById(playPauseButtonId);
+		this.featureBar = document.getElementById(featureBarId);
+		this.propertySelect = document.getElementById("propertySelect");
+		this.valueDisplay = document.getElementById("valueDisplay");
+
+		this.progressBar.addEventListener('input', () => {
+			this.gotoFrame(Math.floor(this.progressBar.value * this.numFrames / 100));
+		});
+
+		this.playPauseButton.addEventListener('click', () => {
+			this.togglePlay();
+		});
 	}
-	if (this.graphCanvas) {
-		this.updateGraphMarker()
+
+	gotoFrame(frame) {
+		this.frame = frame;
+		this.animate();
+		this.updateFeatureBar();
+		this.update();
+	}
+
+	togglePlay() {
+		this.play = !this.play;
+		if (this.play) {
+			this.playPauseButton.textContent = 'Pause';
+			this.oldFrame = this.frame;
+			this.startTime = Date.now();
+			this.play = true;
+		} else {
+			this.playPauseButton.textContent = 'Play';
+		}
+	}
+
+	update() {
+		if (this.play) {
+			this.frame = ((((Date.now() - this.startTime) / this.secsPerFrame / 1000)) * this.speed) | 0;
+			if (this.oldFrame !== 0) this.frame += this.oldFrame;
+			if (this.frame > this.numFrames) { this.frame = 0; this.oldFrame = 0; this.startTime = Date.now(); }
+
+			this.animate();
+		}
+
+		if (this.progressBar) {
+			this.progressBar.value = (this.frame / this.numFrames) * 100;
+		}
+		if (this.featureBar) {
+			this.updateFeatureBar();
+		}
+		if (this.graphCanvas) {
+			this.updateGraphMarker();
+		}
 	}
 }
-// BVH.Reader.prototype.parseData = function(data){
-//
-// 	debugTell("BVH frame:"+this.numFrames+" s/f:"+this.secsPerFrame + " channels:"+this.channels.length + " node:"+ this.nodes.length);
-// 	this.getNodeList();
-// 	this.startTime = Date.now();
-// 	this.play = true;
-//
-// 	// Enable UI elements
-// 	if (this.progressBar) this.progressBar.disabled = false;
-// 	if (this.playPauseButton) this.playPauseButton.disabled = false;
-// }
+
+BVH.DistanceTest = function(p1, p2) {
+	const x = p2.x - p1.x;
+	const y = p2.y - p1.y;
+	const z = p2.z - p1.z;
+	let d = Math.sqrt(x * x + y * y + z * z);
+	if (d <= 0) d = 0.1;
+	return d;
+};
+
+BVH.Reader = BVHReader;
