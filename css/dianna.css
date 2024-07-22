@@ -209,13 +209,19 @@ textarea:focus {
 }
 
 #progress-container {
-  width: 80%;
-  max-width: 500px;
+  width: 100%;
+  max-width: 785px;
   margin: 10px auto;
 }
 
 #progressBar {
   width: 100%;
+}
+
+#graphCanvas {
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid #ccc;
 }
 
 #playPauseButton {

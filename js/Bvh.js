@@ -43,6 +43,9 @@ BVH.Reader = function(){
 	this.propertySelect = null;
 	this.motionData = null;
 	this.featureBar = null;
+
+	this.graphCanvas = document.getElementById('graphCanvas');
+	this.graphCanvasCtx = this.graphCanvas.getContext('2d');
 }
 
 BVH.Reader.prototype = {
@@ -116,6 +119,7 @@ BVH.Reader.prototype = {
 		}
 		this.currentFeatureProperty = this.propertySelect.value;
 		this.updateFeatureBar()
+		this.drawGraph()
 	},
     parseData:function(data){
 		console.log(data)
@@ -489,8 +493,59 @@ BVH.Reader.prototype = {
     	this.frame --;
     	if(this.frame<0)this.frame = this.numFrames;
     	this.animate();
-    }
+    },
+	drawGraph:function() {
 
+		const width = this.graphCanvas.width;
+		const height = this.graphCanvas.height;
+		this.graphCanvasCtx.clearRect(0, 0, width, height);
+
+		const featureValues =  this.motionData[this.currentFeatureProperty]
+
+		// Find min and max values for scaling
+		const min = Math.min(...featureValues);
+		const max = Math.max(...featureValues);
+		const range = max - min;
+
+		// Draw the line
+		this.graphCanvasCtx.beginPath();
+		this.graphCanvasCtx.strokeStyle = '#4CAF50';
+		this.graphCanvasCtx.lineWidth = 2;
+
+		featureValues.forEach((value, index) => {
+			const x = (index / (featureValues.length - 1)) * width;
+			const y = height - ((value - min) / range) * height;
+
+			if (index === 0) {
+				this.graphCanvasCtx.moveTo(x, y);
+			} else {
+				this.graphCanvasCtx.lineTo(x, y);
+			}
+		});
+
+		this.graphCanvasCtx.stroke();
+	},
+	updateGraphMarker:function() {
+		const currentFrame = this.frame;
+		const yourBVHData = this.motionData[this.currentFeatureProperty]
+		const graphCanvas = this.graphCanvas
+		const x = (currentFrame / (yourBVHData.length - 1)) * graphCanvas.width;
+		const ctx = this.graphCanvasCtx
+
+		// Clear previous marker
+		ctx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+
+		// Redraw the graph
+		this.drawGraph();
+
+		// Draw the marker
+		ctx.beginPath();
+		ctx.strokeStyle = 'red';
+		ctx.lineWidth = 2;
+		ctx.moveTo(x, 0);
+		ctx.lineTo(x, graphCanvas.height);
+		ctx.stroke();
+	}
 }
 
 BVH.DistanceTest = function( p1, p2 ){
@@ -525,6 +580,7 @@ BVH.Reader.prototype.gotoFrame = function(frame) {
 	this.frame = frame;
 	this.animate();
 	this.updateFeatureBar()
+	this.update()
 }
 BVH.Reader.prototype.togglePlay = function() {
 
@@ -556,6 +612,9 @@ BVH.Reader.prototype.update = function(){
 	}
 	if (this.featureBar) {
 		this.updateFeatureBar()
+	}
+	if (this.graphCanvas) {
+		this.updateGraphMarker()
 	}
 }
 // BVH.Reader.prototype.parseData = function(data){

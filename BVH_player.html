@@ -535,6 +535,7 @@
 		<div id="BVHhubs">
 			<div id="progress-container">
 				<label for="progressBar"></label><input type="range" id="progressBar" min="0" max="100" value="0" disabled>
+				<canvas id="graphCanvas" width="800" height="100"></canvas>
 			</div>
 
 			<button id="playPauseButton" disabled>Play</button>
@@ -554,14 +555,13 @@
 			</label>
 			<input type="file" id="annotation-file" accept="application/json" />
 
+
 			<label for="propertySelect">
 				<select id="propertySelect" disabled>
 					<option value="">Select a property</option>
 				</select>
 			</label>
 		</div>
-
-
 <!--		<div id="output1"></div>-->
 <!--		<div id="output2"></div>-->
 
