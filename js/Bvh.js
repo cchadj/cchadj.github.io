@@ -1,11 +1,103 @@
 const BVH = { REVISION: '0.1a' };
-let progressBar, playPauseButton;
 
 BVH.TO_RAD = Math.PI / 180;
 window.URL = window.URL || window.webkitURL;
 
+class BVHManager {
+
+	/**
+	 * @param progressBar {ProgressBar}
+	 * @param bvhReaders {BVHReader[]}
+	 */
+	constructor(progressBar, bvhReaders = []) {
+		this.bvhReaders = bvhReaders;
+		this.progressBar = progressBar;
+		this.currentFrame = 0;
+		this.startTime = 0;
+
+		this.progressBar.setUpdateCallback(this.gotoFrame.bind(this));
+		this.progressBar.setTogglePlayCallback(this.togglePlay.bind(this));
+	}
+
+	/**
+	 * @param bvhReader {BVHReader}
+	 */
+	addBVHReader(bvhReader) {
+		this.bvhReaders.push(bvhReader);
+		const numFrames = bvhReader.getNumFrames();
+		console.log("numFrames", numFrames);
+		if (numFrames > this.progressBar.numFrames) {
+			this.progressBar.setNumFrames(numFrames);
+		}
+	}
+
+	/**
+	 * @param frame {number}
+	 */
+	gotoFrame(frame) {
+		console.log("Frame", frame);
+		this.currentFrame = frame;
+		this.bvhReaders.forEach(reader => reader.gotoFrame(frame));
+	}
+
+	togglePlay() {
+		// this.startTime = undefined;
+		if (!this.progressBar.playing) {
+			// If we're starting playback, use the current frame as the starting point
+			this.startTime = performance.now() - (this.currentFrame / this.getSpeed() * 1000);
+		}
+		this.progressBar.playing = !this.progressBar.playing;
+		if (this.progressBar.playing) {
+			requestAnimationFrame(this.update.bind(this));
+		}
+	}
+
+	/**
+	 * @param timeStamp {number}
+	 */
+	update(timeStamp) {
+		if (this.startTime === undefined) {
+			this.startTime = timeStamp;
+		}
+		const elapsed = timeStamp - this.startTime;
+		if (this.progressBar.playing) {
+			this.currentFrame = Math.floor((elapsed / 1000) * this.getSpeed() )| 0;
+			this.bvhReaders.forEach(reader => reader.update(this.currentFrame));
+			this.progressBar.updateProgressBar(this.currentFrame);
+			requestAnimationFrame(this.update.bind(this));
+		}
+	}
+
+	// update(timestamp) {
+	// 	console.log(timestamp)
+	// 	if (this.progressBar.playing) {
+	// 		this.currentFrame = ((((Date.now() - this.startTime) / 1000)) * this.getSpeed()) | 0;
+	// 		this.bvhReaders.forEach(reader => reader.update(this.currentFrame));
+	// 		this.progressBar.updateProgressBar(this.currentFrame);
+	// 	}
+	// }
+
+	reset() {
+		this.startTime = Date.now();
+	}
+
+	getSpeed() {
+		// Return a common speed or individual speeds based on implementation
+		return 24.8;
+	}
+}
+
 class BVHReader {
-	constructor() {
+	static num = 1;
+
+	/**
+	 *
+	 * @param scene {THREE.Scene}
+	 */
+	constructor(scene) {
+		this.scene = scene
+		this.name = `bvh-reader-${BVHReader.num}`
+		BVHReader.num += 1;
 		this.debug = true;
 		this.type = "";
 		this.data = null;
@@ -57,7 +149,7 @@ class BVHReader {
 
 		if (this.type === 'bvh') {
 			xhr.onreadystatechange = () => {
-				if (xhr.readyState == 4) {
+				if (xhr.readyState === 4) {
 					this.parseData(xhr.responseText.split(/\s+/g));
 				}
 			};
@@ -127,7 +219,6 @@ class BVHReader {
 	}
 
 	parseData(data) {
-		console.log(data);
 		this.data = data;
 		this.channels = [];
 		this.nodes = [];
@@ -162,6 +253,14 @@ class BVHReader {
 		if (this.progressBar) this.progressBar.disabled = false;
 		if (this.playPauseButton) this.playPauseButton.disabled = false;
 		this.togglePlay();
+	}
+
+	/**
+	 *
+	 * @returns {int}
+	 */
+	getNumFrames() {
+		return this.numFrames;
 	}
 
 	reScale(s) {
@@ -202,7 +301,7 @@ class BVHReader {
 				this.bones[i] = bone;
 			}
 		}
-		scene.add(this.skeleton);
+		this.scene.add(this.skeleton);
 	}
 
 	updateSkeleton() {
@@ -317,7 +416,7 @@ class BVHReader {
 					}
 				}
 				this.bones.length = 0;
-				scene.remove(this.skeleton);
+				this.scene.remove(this.skeleton);
 			}
 		}
 	}
@@ -518,22 +617,26 @@ class BVHReader {
 		this.featureBar = document.getElementById(featureBarId);
 		this.propertySelect = document.getElementById("propertySelect");
 		this.valueDisplay = document.getElementById("valueDisplay");
-
-		this.progressBar.addEventListener('input', () => {
-			this.gotoFrame(Math.floor(this.progressBar.value * this.numFrames / 100));
-		});
-
-		this.playPauseButton.addEventListener('click', () => {
-			this.togglePlay();
-		});
 	}
 
+	/**
+	 * @param frame {number}
+	 */
 	gotoFrame(frame) {
+		if (frame >= this.numFrames) {
+			this.play = false;
+			frame = this.numFrames - 1;
+		}
 		this.frame = frame;
 		this.animate();
-		this.updateFeatureBar();
-		this.update();
 	}
+
+	// gotoFrame(frame) {
+	// 	this.frame = frame;
+	// 	this.animate();
+	// 	this.updateFeatureBar();
+	// 	this.update();
+	// }
 
 	togglePlay() {
 		this.play = !this.play;
@@ -547,25 +650,39 @@ class BVHReader {
 		}
 	}
 
-	update() {
-		if (this.play) {
-			this.frame = ((((Date.now() - this.startTime) / this.secsPerFrame / 1000)) * this.speed) | 0;
-			if (this.oldFrame !== 0) this.frame += this.oldFrame;
-			if (this.frame > this.numFrames) { this.frame = 0; this.oldFrame = 0; this.startTime = Date.now(); }
-
-			this.animate();
+	/**
+	 * @param frame {number}
+	 */
+	update(frame) {
+		if (frame > this.numFrames) {
+			this.play = false;
+			this.frame = this.numFrames - 1;
+			return;
 		}
-
-		if (this.progressBar) {
-			this.progressBar.value = (this.frame / this.numFrames) * 100;
-		}
-		if (this.featureBar) {
-			this.updateFeatureBar();
-		}
-		if (this.graphCanvas) {
-			this.updateGraphMarker();
-		}
+		this.frame = frame;
+		this.animate();
 	}
+
+	// update() {
+	// 	if (this.play) {
+	// 		this.frame = ((((Date.now() - this.startTime) / this.secsPerFrame / 1000)) * this.speed) | 0;
+	// 		if (this.oldFrame !== 0) this.frame += this.oldFrame;
+	// 		if (this.frame > this.numFrames) { this.frame = 0; this.oldFrame = 0; this.startTime = Date.now(); }
+	//
+	// 		this.animate();
+	// 	}
+	//
+	// 	if (this.progressBar) {
+	// 		this.progressBar.value = (this.frame / this.numFrames) * 100;
+	// 	}
+	// 	if (this.featureBar) {
+	// 		this.updateFeatureBar();
+	// 	}
+	// 	if (this.graphCanvas) {
+	// 		this.updateGraphMarker();
+	// 	}
+	// }
+
 }
 
 BVH.DistanceTest = function(p1, p2) {
@@ -578,3 +695,4 @@ BVH.DistanceTest = function(p1, p2) {
 };
 
 BVH.Reader = BVHReader;
+BVH.Manager = BVHManager;
