@@ -1,9 +1,10 @@
-class ProgressBar {
+class ProgressBar extends Animatable {
     /**
      * @param progressBarId {string}
      * @param playPauseButtonId {string}
      */
     constructor(progressBarId, playPauseButtonId) {
+        super()
         this.progressBar = document.getElementById(progressBarId);
         this.playPauseButton = document.getElementById(playPauseButtonId);
         this.numFrames = 0;
@@ -50,7 +51,11 @@ class ProgressBar {
         this.playPauseButton.textContent = this.playing ? 'Pause' : 'Play';
     }
 
-    updateProgressBar(frame) {
+    getNumFrames() {
+        return this.numFrames;
+    }
+
+    gotoFrame(frame) {
         this.progressBar.value = (frame / this.numFrames) * 100;
     }
 }
