@@ -8,23 +8,33 @@ class BVHManager {
 	/**
 	 * @param progressBar {ProgressBar}
 	 * @param bvhReaders {BVHReader[]}
+	 * @param annotationGraphs {AnnotationGraphLine[]}
 	 */
-	constructor(progressBar, bvhReaders = []) {
+	constructor(
+		progressBar,
+		bvhReaders = [],
+		annotationGraphs = [],
+	) {
 		this.bvhReaders = bvhReaders;
 		this.progressBar = progressBar;
 		this.currentFrame = 0;
 		this.startTime = 0;
+		this.annotationGraphs = annotationGraphs;
+		/**
+		 * @type {Animatable[]}
+		 */
+		this.animatables = [this.progressBar, ...this.bvhReaders, ...this.annotationGraphs]
 
 		this.progressBar.setUpdateCallback(this.gotoFrame.bind(this));
 		this.progressBar.setTogglePlayCallback(this.togglePlay.bind(this));
 	}
 
 	/**
-	 * @param bvhReader {BVHReader}
+	 * @param animatable {Animatable}
 	 */
-	addBVHReader(bvhReader) {
-		this.bvhReaders.push(bvhReader);
-		const numFrames = bvhReader.getNumFrames();
+	addAnimatable(animatable) {
+		this.animatables.push(animatable);
+		const numFrames = animatable.getNumFrames();
 		console.log("numFrames", numFrames);
 		if (numFrames > this.progressBar.numFrames) {
 			this.progressBar.setNumFrames(numFrames);
@@ -32,12 +42,37 @@ class BVHManager {
 	}
 
 	/**
+	 * @param bvhReader {BVHReader}
+	 */
+	// addBVHReader(bvhReader) {
+	// 	this.bvhReaders.push(bvhReader);
+	// 	this.animatables.push(bvhReader);
+	// 	const numFrames = bvhReader.getNumFrames();
+	// 	console.log("numFrames", numFrames);
+	// 	if (numFrames > this.progressBar.numFrames) {
+	// 		this.progressBar.setNumFrames(numFrames);
+	// 	}
+	// }
+
+	/**
+	 * @param annotationGraph {AnnotationGraphLine}
+	 */
+	// addAnnotationGraph(annotationGraph) {
+	// 	this.annotationGraphs.push(annotationGraph);
+	// 	this.animatables.push(annotationGraph);
+	// 	const numFrames = annotationGraph.getNumFrames();
+	// 	if (numFrames > this.progressBar.numFrames) {
+	// 		this.progressBar.setNumFrames(numFrames);
+	// 	}
+	// }
+
+	/**
 	 * @param frame {number}
 	 */
 	gotoFrame(frame) {
 		console.log("Frame", frame);
 		this.currentFrame = frame;
-		this.bvhReaders.forEach(reader => reader.gotoFrame(frame));
+		this.animatables.forEach(a => a.gotoFrame(frame))
 	}
 
 	togglePlay() {
@@ -62,20 +97,10 @@ class BVHManager {
 		const elapsed = timeStamp - this.startTime;
 		if (this.progressBar.playing) {
 			this.currentFrame = Math.floor((elapsed / 1000) * this.getSpeed() )| 0;
-			this.bvhReaders.forEach(reader => reader.update(this.currentFrame));
-			this.progressBar.updateProgressBar(this.currentFrame);
+			this.animatables.forEach(a => a.gotoFrame(this.currentFrame))
 			requestAnimationFrame(this.update.bind(this));
 		}
 	}
-
-	// update(timestamp) {
-	// 	console.log(timestamp)
-	// 	if (this.progressBar.playing) {
-	// 		this.currentFrame = ((((Date.now() - this.startTime) / 1000)) * this.getSpeed()) | 0;
-	// 		this.bvhReaders.forEach(reader => reader.update(this.currentFrame));
-	// 		this.progressBar.updateProgressBar(this.currentFrame);
-	// 	}
-	// }
 
 	reset() {
 		this.startTime = Date.now();
@@ -87,7 +112,7 @@ class BVHManager {
 	}
 }
 
-class BVHReader {
+class BVHReader extends Animatable{
 	static num = 1;
 
 	/**
@@ -95,6 +120,8 @@ class BVHReader {
 	 * @param scene {THREE.Scene}
 	 */
 	constructor(scene) {
+		super()
+
 		this.scene = scene
 		this.name = `bvh-reader-${BVHReader.num}`
 		BVHReader.num += 1;
@@ -662,27 +689,6 @@ class BVHReader {
 		this.frame = frame;
 		this.animate();
 	}
-
-	// update() {
-	// 	if (this.play) {
-	// 		this.frame = ((((Date.now() - this.startTime) / this.secsPerFrame / 1000)) * this.speed) | 0;
-	// 		if (this.oldFrame !== 0) this.frame += this.oldFrame;
-	// 		if (this.frame > this.numFrames) { this.frame = 0; this.oldFrame = 0; this.startTime = Date.now(); }
-	//
-	// 		this.animate();
-	// 	}
-	//
-	// 	if (this.progressBar) {
-	// 		this.progressBar.value = (this.frame / this.numFrames) * 100;
-	// 	}
-	// 	if (this.featureBar) {
-	// 		this.updateFeatureBar();
-	// 	}
-	// 	if (this.graphCanvas) {
-	// 		this.updateGraphMarker();
-	// 	}
-	// }
-
 }
 
 BVH.DistanceTest = function(p1, p2) {

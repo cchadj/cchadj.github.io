@@ -315,6 +315,25 @@
             }
         }
 
+        // const graphLineColours = [
+        //     '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
+        //     '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
+        //     '#bcbd22', '#17becf'
+        // ]
+        const graphLineColours = [
+            'rgba(31, 119, 180, 1)',  // Blue
+            'rgba(255, 127, 14, 0.9)',  // Orange
+            'rgba(44, 160, 44, 0.8)',  // Green
+            'rgba(214, 39, 40, 0.7)',  // Red
+            'rgba(148, 103, 189, 0.6)',  // Purple
+            'rgba(140, 86, 75, 0.5)',  // Brown
+            'rgba(227, 119, 194, 0.4)',  // Pink
+            'rgba(127, 127, 127, 0.3)',  // Gray
+            'rgba(188, 189, 34, 0.2)',  // Olive
+            'rgba(23, 190, 207, 0.1)'  // Cyan
+        ];
+        let graphLineColourIdx = 0;
+
 
         function toAngles(o) {
             var q = o.quaternion.clone();
@@ -453,8 +472,11 @@
             initBVHGui(bvhReader);
         }
 
+        const graphCanvas = $("canvas#graphCanvas").get(0)
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const bvhManager = new BVHManager(progressBar);
+        const annotationGraph = new AnnotationGraphManager(graphCanvas)
+        bvhManager.addAnimatable(annotationGraph)
 
         $('#bvh-file').on('change', function(evt) {
             const files = evt.target.files;
@@ -466,7 +488,7 @@
                     const bvhReader = new BVHReader(scene);
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
-                    bvhManager.addBVHReader(bvhReader);
+                    bvhManager.addAnimatable(bvhReader);
                     bvhManager.reset();
                 };
                 reader.readAsText(file);
@@ -481,9 +503,19 @@
             reader.onload = function(e) {
                 try {
                     const motionData = JSON.parse(e.target.result);
-                    bvhManager.bvhReaders.forEach(reader => reader.parseMotionData(motionData));
+                    const strokeStyle = graphLineColours[graphLineColourIdx]
+                    graphLineColourIdx = (graphLineColourIdx + 1) % graphLineColours.length
+                    const annotationGraphLine = new AnnotationGraphLine(
+                        graphCanvas,
+                        motionData,
+                        strokeStyle,
+                        5
+                    )
+                    annotationGraph.addGraphLine(annotationGraphLine)
+                    annotationGraph.clearGraph()
+                    annotationGraph.drawGraph()
                 } catch (error) {
-                    alert(`Could not parse motion data ${error}`);
+                    console.error(error)
                 }
             };
             reader.readAsText(file);
