@@ -4,16 +4,17 @@ BVH.TO_RAD = Math.PI / 180;
 window.URL = window.URL || window.webkitURL;
 
 class BVHManager {
-
 	/**
 	 * @param progressBar {ProgressBar}
 	 * @param bvhReaders {BVHReader[]}
 	 * @param annotationGraphs {AnnotationGraphLine[]}
+	 * @param frames_per_second {number}
 	 */
 	constructor(
 		progressBar,
 		bvhReaders = [],
 		annotationGraphs = [],
+		frames_per_second = 24.98,
 	) {
 		this.bvhReaders = bvhReaders;
 		this.progressBar = progressBar;
@@ -31,7 +32,22 @@ class BVHManager {
 		this.previousTimeStamp = 0;
 
 		this.timeElapsedSinceLastFrame = 0;
+		this.frames_per_second = frames_per_second;
 	}
+
+	set frames_per_second(value) {
+		this._frames_per_second = value;
+		this._seconds_per_frame = 1 / value;
+	}
+
+	get frames_per_second() {
+		return this._frames_per_second;
+	}
+
+	get seconds_per_frame() {
+		return this._seconds_per_frame;
+	}
+
 
 	/**
 	 * @param animatable {Animatable}
@@ -65,13 +81,9 @@ class BVHManager {
 	}
 
 	togglePlay() {
-		// if (!this.progressBar.playing) {
-		// 	this.startTimeStamp = performance.now() - (this.currentFrame / this.getSpeed() * 1000);
-		// }
 		this.progressBar.playing = !this.progressBar.playing;
 		if (this.progressBar.playing) {
 			this.progressBar.setNumFrames(this.getNumFrames())
-			// this.timeElapsedSinceLastFrame = 0;
 			this.startTimeStamp = performance.now()
 			this.previousTimeStamp = this.startTimeStamp
 			this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
@@ -80,7 +92,6 @@ class BVHManager {
 			if (this.currentAnimationFrame) {
 				cancelAnimationFrame(this.currentAnimationFrame);
 			}
-
 		}
 	}
 
@@ -89,15 +100,11 @@ class BVHManager {
 	 */
 	update(deltaTime) {
 		this.timeElapsedSinceLastFrame += deltaTime;
-		console.log("time")
-		console.log(this.timeElapsedSinceLastFrame);
-		const frames_per_second = 24.98;
-		const seconds_per_frame = 1 / frames_per_second;
 
-		if (this.timeElapsedSinceLastFrame >= seconds_per_frame) {
+		if (this.timeElapsedSinceLastFrame >= this.seconds_per_frame) {
 			this.currentFrame += 1;
-			this.animatables.forEach(a => a.gotoFrame(this.currentFrame))
-			this.timeElapsedSinceLastFrame -= seconds_per_frame;
+			this.gotoFrame(this.currentFrame)
+			this.timeElapsedSinceLastFrame -= this.seconds_per_frame;
 		}
 	}
 
