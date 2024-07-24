@@ -1,4 +1,139 @@
+class BVHManager {
+    /**
+     * @param progressBar {ProgressBar}
+     * @param annotationGraph {AnnotationGraph}
+     * @param frames_per_second {number}
+     */
+    constructor(
+        progressBar,
+        annotationGraph,
+        frames_per_second = 24.98,
+    ) {
+        this._progressBar = progressBar;
+        this._progressBar.setUpdateCallback(this.gotoFrame.bind(this));
+        this._progressBar.setTogglePlayCallback(this.togglePlay.bind(this));
+        this._annotationGraph = annotationGraph;
 
+        /**
+         * @type {Animatable[]}
+         */
+        this.animatables = [this._progressBar, this._annotationGraph]
+
+        this.currentFrame = 0;
+        this.startTimeStamp = 0;
+        this.previousTimeStamp = 0;
+
+        this.timeElapsedSinceLastFrame = 0;
+        this.frames_per_second = frames_per_second;
+    }
+
+    get progressBar() {
+        return this._progressBar;
+    }
+
+    get annotationGraph() {
+        return this._annotationGraph;
+    }
+
+    set frames_per_second(value) {
+        this._frames_per_second = value;
+        this._seconds_per_frame = 1 / value;
+    }
+
+    get frames_per_second() {
+        return this._frames_per_second;
+    }
+
+    get seconds_per_frame() {
+        return this._seconds_per_frame;
+    }
+
+
+    /**
+     * @param animatable {Animatable}
+     */
+    addAnimatable(animatable) {
+        this.animatables.push(animatable);
+        this.progressBar.setNumFrames(this.getNumFrames());
+        this.annotationGraph.graphFrames = this.getNumFrames();
+        // const numFrames = animatable.getNumFrames();
+        // console.log("numFrames", numFrames);
+        // if (numFrames > this.progressBar.numFrames) {
+        // 	console.log("new Max Num Frames", numFrames);
+        // 	this.progressBar.setNumFrames(numFrames);
+        // }
+    }
+
+    getNumFrames() {
+        const maxFrames = this.animatables.reduce((max, obj) => {
+            let numFrames = obj.getNumFrames();
+            return numFrames > max ? numFrames : max;
+        }, 0);
+        return maxFrames;
+    }
+
+    /**
+     * @param frame {number}
+     */
+    gotoFrame(frame) {
+        console.log("Frame", frame);
+        this._progressBar.setNumFrames(this.getNumFrames())
+        this.currentFrame = frame;
+        this.animatables.forEach(a => a.gotoFrame(frame))
+    }
+
+    togglePlay() {
+        this._progressBar.playing = !this._progressBar.playing;
+        if (this._progressBar.playing) {
+            this._progressBar.setNumFrames(this.getNumFrames())
+            this.startTimeStamp = performance.now()
+            this.previousTimeStamp = this.startTimeStamp
+            this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
+        } else {
+            if (this.currentAnimationFrame) {
+                cancelAnimationFrame(this.currentAnimationFrame);
+            }
+        }
+    }
+
+    /**
+     * @param deltaTime {number}
+     */
+    update(deltaTime) {
+        this.timeElapsedSinceLastFrame += deltaTime;
+
+        if (this.timeElapsedSinceLastFrame >= this.seconds_per_frame) {
+            this.currentFrame += 1;
+            this.gotoFrame(this.currentFrame)
+            this.timeElapsedSinceLastFrame -= this.seconds_per_frame;
+        }
+    }
+
+    /**
+     * @param currentTimeStamp {number}
+     */
+    updateHelper(currentTimeStamp) {
+        if (!this.startTimeStamp) {
+            this.startTimeStamp = performance.now();
+        }
+
+        const deltaTime = (currentTimeStamp - this.previousTimeStamp) / 1000;
+        this.update(deltaTime)
+        this.previousTimeStamp = currentTimeStamp;
+
+        this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
+    }
+
+    reset() {
+        this.gotoFrame(0)
+        this.animatables.forEach(a => a.reset())
+    }
+
+    getSpeed() {
+        // Return a common speed or individual speeds based on implementation
+        return 24.8;
+    }
+}
 
 (function($, window, document) {
 
