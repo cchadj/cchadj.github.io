@@ -1,4 +1,4 @@
-class BVHManager {
+class BvhPlayer {
     /**
      * @param progressBar {ProgressBar}
      * @param annotationGraph {AnnotationGraph}
@@ -658,7 +658,7 @@ class BVHManager {
 
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
-        const bvhManager = new BVHManager(progressBar, annotationGraph);
+        const bvhManager = new BvhPlayer(progressBar, annotationGraph);
 
         $('#bvh-file').on('change', function(evt) {
             const files = evt.target.files;
