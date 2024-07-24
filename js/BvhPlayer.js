@@ -56,12 +56,6 @@ class BvhPlayer {
         this.animatables.push(animatable);
         this.progressBar.setNumFrames(this.getNumFrames());
         this.annotationGraph.graphFrames = this.getNumFrames();
-        // const numFrames = animatable.getNumFrames();
-        // console.log("numFrames", numFrames);
-        // if (numFrames > this.progressBar.numFrames) {
-        // 	console.log("new Max Num Frames", numFrames);
-        // 	this.progressBar.setNumFrames(numFrames);
-        // }
     }
 
     getNumFrames() {
@@ -128,68 +122,41 @@ class BvhPlayer {
         this.gotoFrame(0)
         this.animatables.forEach(a => a.reset())
     }
-
-    getSpeed() {
-        // Return a common speed or individual speeds based on implementation
-        return 24.8;
-    }
 }
 
 (function($, window, document) {
 
     $(function() {
-        const bvhReaders = [];
         const vsize = {x: 100, y: 100, z: 0};
         let mouse = {x: 0, y: 0};
         let lightPos, camPos;
 
-        const inRender = true, inResize = false, isNeedPause = false;
         const FAR = 2000;
 
         const ToRad = Math.PI / 180;
         const ToDeg = 180 / Math.PI;
 
-        let camera, container, scene, renderer, composer, renderPass, delta, center, centerLight;
+        let camera, container, scene, renderer, center, centerLight;
         let ambient, hemiLight, pointLight, light;
-        let body, suit, bodyNeck, bodyHead, head, neck, hair, eyeR, eyeL, teethUp, teethDown, eyeTop, tongue, troat,
-            headBase, fakeNeck, eyesTarget;
 
-        const materials = [];
-        const clock = new THREE.Clock();
         let ground;
 
         let gui;
         const animConfig = {
             current: "none",
-            //neckmove:false,
             idle: false,
             walk: true,
             salut: false,
             speed: 0.8
         };
 
-        const viewConfig = {
-            squeleton: false,
-            antialias: false,
-            withEffect: false,
-            withNormal: false,
-            withBump: true
-        };
-
         let sky;
-        let skyCube;
 
         let debug;
 
         const bvhReader = null;
 
-        const displayModel = true;
-        let squeleton;
-        const bonesReference = [];
-
-
         const SeaStandard = false;
-        const BonesRevers = true;
 
         function init() {
 
@@ -411,35 +378,15 @@ class BvhPlayer {
             BVHanimConfig.next = function() { bvhReader.next(); };
             BVHanimConfig.prev = function() { bvhReader.prev(); };
 
-
-            // f5.add( BVHanimConfig, 'calibration' );
-            // f5.add( BVHanimConfig, 'ballet' );
-            // f5.add( BVHanimConfig, 'shoot' );
-            // f5.add( BVHanimConfig, 'sprint' );
-            // f5.add( BVHanimConfig, 'exsize' );
-            // f5.add( BVHanimConfig, 'test' );
-            // f5.add( BVHanimConfig, 'big' );
-            // f5.add( BVHanimConfig, 'c11A' );
-            // f5.add( BVHanimConfig, 'c11B' );
-            //  f5.add( BVHanimConfig, 'dance' );
-
             f5.add( BVHanimConfig, 'speed', 0.01, 2 ).onChange( function() { bvhReader.speed = BVHanimConfig.speed; });;
-
-            // f5.add( BVHanimConfig, 'stop' );
-            // f5.add( BVHanimConfig, 'play' )
-            // f5.add( BVHanimConfig, 'next' );
-            // f5.add( BVHanimConfig, 'prev' );
-
             f5.add( BVHanimConfig, 'size', 1, 10 ).onChange( function() { bvhReader.reScale(BVHanimConfig.size) });
             f5.add( BVHanimConfig, 'px', -100, 100 ).onChange( function() { positionBVH() });;
             f5.add( BVHanimConfig, 'py', -100, 100 ).onChange( function() { positionBVH() });;
             f5.add( BVHanimConfig, 'pz', -100, 100 ).onChange( function() { positionBVH() });;
-
             f5.add( BVHanimConfig, 'boneSize', 0.1, 5 ).onChange( function() { bvhReader.boneSize = BVHanimConfig.boneSize; });
-
             f5.open();
-
         }
+
         function positionBVH() {
             bvhReader.rePosition(new THREE.Vector3( BVHanimConfig.px || 0, BVHanimConfig.py|| 0, BVHanimConfig.pz|| 0 ))
         }
@@ -451,11 +398,6 @@ class BvhPlayer {
             }
         }
 
-        // const graphLineColours = [
-        //     '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
-        //     '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
-        //     '#bcbd22', '#17becf'
-        // ]
         const graphLineColours = [
             'rgba(31, 119, 180, 1)',  // Blue
             'rgba(255, 127, 14, 0.9)',  // Orange
