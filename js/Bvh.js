@@ -18,7 +18,6 @@ class BVHManager {
 		this.bvhReaders = bvhReaders;
 		this.progressBar = progressBar;
 		this.currentFrame = 0;
-		this.startTime = 0;
 		this.annotationGraphs = annotationGraphs;
 		/**
 		 * @type {Animatable[]}
@@ -27,6 +26,11 @@ class BVHManager {
 
 		this.progressBar.setUpdateCallback(this.gotoFrame.bind(this));
 		this.progressBar.setTogglePlayCallback(this.togglePlay.bind(this));
+
+		this.startTimeStamp = 0;
+		this.previousTimeStamp = 0;
+
+		this.timeElapsedSinceLastFrame = 0;
 	}
 
 	/**
@@ -37,73 +41,84 @@ class BVHManager {
 		const numFrames = animatable.getNumFrames();
 		console.log("numFrames", numFrames);
 		if (numFrames > this.progressBar.numFrames) {
+			console.log("new Max Num Frames", numFrames);
 			this.progressBar.setNumFrames(numFrames);
 		}
 	}
 
-	/**
-	 * @param bvhReader {BVHReader}
-	 */
-	// addBVHReader(bvhReader) {
-	// 	this.bvhReaders.push(bvhReader);
-	// 	this.animatables.push(bvhReader);
-	// 	const numFrames = bvhReader.getNumFrames();
-	// 	console.log("numFrames", numFrames);
-	// 	if (numFrames > this.progressBar.numFrames) {
-	// 		this.progressBar.setNumFrames(numFrames);
-	// 	}
-	// }
-
-	/**
-	 * @param annotationGraph {AnnotationGraphLine}
-	 */
-	// addAnnotationGraph(annotationGraph) {
-	// 	this.annotationGraphs.push(annotationGraph);
-	// 	this.animatables.push(annotationGraph);
-	// 	const numFrames = annotationGraph.getNumFrames();
-	// 	if (numFrames > this.progressBar.numFrames) {
-	// 		this.progressBar.setNumFrames(numFrames);
-	// 	}
-	// }
+	getNumFrames() {
+		const maxFrames = this.animatables.reduce((max, obj) => {
+			let numFrames = obj.getNumFrames();
+			return numFrames > max ? numFrames : max;
+		}, 0);
+		return maxFrames;
+	}
 
 	/**
 	 * @param frame {number}
 	 */
 	gotoFrame(frame) {
 		console.log("Frame", frame);
+		this.progressBar.setNumFrames(this.getNumFrames())
 		this.currentFrame = frame;
 		this.animatables.forEach(a => a.gotoFrame(frame))
 	}
 
 	togglePlay() {
-		// this.startTime = undefined;
-		if (!this.progressBar.playing) {
-			// If we're starting playback, use the current frame as the starting point
-			this.startTime = performance.now() - (this.currentFrame / this.getSpeed() * 1000);
-		}
+		// if (!this.progressBar.playing) {
+		// 	this.startTimeStamp = performance.now() - (this.currentFrame / this.getSpeed() * 1000);
+		// }
 		this.progressBar.playing = !this.progressBar.playing;
 		if (this.progressBar.playing) {
-			requestAnimationFrame(this.update.bind(this));
+			this.progressBar.setNumFrames(this.getNumFrames())
+			// this.timeElapsedSinceLastFrame = 0;
+			this.startTimeStamp = performance.now()
+			this.previousTimeStamp = this.startTimeStamp
+			this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
+		}
+		else {
+			if (this.currentAnimationFrame) {
+				cancelAnimationFrame(this.currentAnimationFrame);
+			}
+
 		}
 	}
 
 	/**
-	 * @param timeStamp {number}
+	 * @param deltaTime {number}
 	 */
-	update(timeStamp) {
-		if (this.startTime === undefined) {
-			this.startTime = timeStamp;
-		}
-		const elapsed = timeStamp - this.startTime;
-		if (this.progressBar.playing) {
-			this.currentFrame = Math.floor((elapsed / 1000) * this.getSpeed() )| 0;
+	update(deltaTime) {
+		this.timeElapsedSinceLastFrame += deltaTime;
+		console.log("time")
+		console.log(this.timeElapsedSinceLastFrame);
+		const frames_per_second = 24.98;
+		const seconds_per_frame = 1 / frames_per_second;
+
+		if (this.timeElapsedSinceLastFrame >= seconds_per_frame) {
+			this.currentFrame += 1;
 			this.animatables.forEach(a => a.gotoFrame(this.currentFrame))
-			requestAnimationFrame(this.update.bind(this));
+			this.timeElapsedSinceLastFrame -= seconds_per_frame;
 		}
+	}
+
+	/**
+	 * @param currentTimeStamp {number}
+	 */
+	updateHelper(currentTimeStamp) {
+		if (!this.startTimeStamp) {
+			this.startTimeStamp = performance.now();
+		}
+
+		const deltaTime = (currentTimeStamp - this.previousTimeStamp) / 1000;
+		this.update(deltaTime)
+		this.previousTimeStamp = currentTimeStamp;
+
+		this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
 	}
 
 	reset() {
 		this.startTime = Date.now();
+		this.animatables.forEach(a => a.reset())
 	}
 
 	getSpeed() {
@@ -564,55 +579,6 @@ class BVHReader extends Animatable{
 		// Label for minimum value (0)
 		ctx.fillText('0', 14, height - 10);
 
-		ctx.stroke();
-	}
-
-	updateGraphMarker() {
-		if (!this.currentFeatureProperty || !this.motionData || !this.motionData[this.currentFeatureProperty]){
-			return;
-		}
-		const featureData = this.motionData[this.currentFeatureProperty];
-		const x = (this.frame / (featureData.length - 1)) * this.graphCanvas.width;
-		const ctx = this.graphCanvasCtx;
-		const canvasHeight = this.graphCanvas.height;
-
-		const min = 0;
-		const max = 1;
-		const value = this.motionData[this.currentFeatureProperty][this.frame];
-
-		const range = max - min;
-
-		ctx.clearRect(0, 0, this.graphCanvas.width, this.graphCanvas.height);
-
-		this.drawGraph();
-
-
-		ctx.beginPath();
-		// Add y-axis labels
-		ctx.font = '18px Arial';
-		ctx.fillStyle = 'white';
-		ctx.textAlign = 'right';
-		ctx.textBaseline = 'middle';
-
-
-		const y = canvasHeight - ((value - min) / range) * canvasHeight;
-		let letterHeight = y  - 15;
-		if ( y > canvasHeight ) {
-			letterHeight = y  + 25;
-		}
-		else if ( y <= 0 ) {
-			letterHeight = y - 25;
-		}
-		// Label for maximum value (1)
-		ctx.fillText(value.toPrecision(2), x, letterHeight);
-		ctx.stroke();
-
-
-		ctx.beginPath();
-		ctx.strokeStyle = 'red';
-		ctx.lineWidth = 2;
-		ctx.moveTo(x, 0);
-		ctx.lineTo(x, canvasHeight);
 		ctx.stroke();
 	}
 

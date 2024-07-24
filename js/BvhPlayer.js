@@ -472,10 +472,57 @@
             initBVHGui(bvhReader);
         }
 
-        const graphCanvas = $("canvas#graphCanvas").get(0)
+        // fit a rect into some container, keeping the aspect ratio of the rect
+        function fitRectIntoContainer (rectWidth, rectHeight, containerWidth, containerHeight) {
+
+            const widthRatio = containerWidth / rectWidth;    // ratio container width to rect width
+            const heightRatio = containerHeight / rectHeight; // ratio container height to rect height
+
+            const ratio = Math.min( widthRatio, heightRatio ); // take the smaller ratio
+
+            // new rect width and height, scaled by the same ratio
+            return {
+                width: rectWidth * ratio,
+                height: rectHeight * ratio,
+            };
+        }
+
+        /**
+         *
+         * @param canvas {HTMLCanvasElement}
+         * @param width {number}
+         * @param height {number}
+         */
+        function resizeCanvas(canvas, width, height) {
+            // Set the canvas drawing surface width and height
+            canvas.width = width;
+            canvas.height = height;
+
+            // Optionally set the CSS width and height
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+
+            // Optionally, redraw or reinitialize your canvas content
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                // Redraw content here if needed
+            }
+        }
+        const graphCanvas = $("canvas#graphCanvas")
+        const graphCanvasElement = graphCanvas.get(0)
+        const canvasContainer = $("#progressContainer")
+        const canvasSize = fitRectIntoContainer(
+            graphCanvas.width(),
+            graphCanvas.height(),
+            canvasContainer.width(),
+            canvasContainer.height()
+        );
+        resizeCanvas(graphCanvasElement, canvasSize.width, canvasSize.height)
+
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const bvhManager = new BVHManager(progressBar);
-        const annotationGraph = new AnnotationGraphManager(graphCanvas)
+        const annotationGraph = new AnnotationGraphManager(graphCanvasElement)
         bvhManager.addAnimatable(annotationGraph)
 
         $('#bvh-file').on('change', function(evt) {
@@ -490,6 +537,10 @@
                     bvhReader.parseData(e.target.result.split(/\s+/g));
                     bvhManager.addAnimatable(bvhReader);
                     bvhManager.reset();
+
+                    annotationGraph.graphFrames = bvhManager.getNumFrames()
+                    annotationGraph.clearGraph()
+                    annotationGraph.drawGraph()
                 };
                 reader.readAsText(file);
             }
@@ -506,14 +557,16 @@
                     const strokeStyle = graphLineColours[graphLineColourIdx]
                     graphLineColourIdx = (graphLineColourIdx + 1) % graphLineColours.length
                     const annotationGraphLine = new AnnotationGraphLine(
-                        graphCanvas,
+                        graphCanvasElement,
                         motionData,
                         strokeStyle,
                         5
                     )
                     annotationGraph.addGraphLine(annotationGraphLine)
+                    annotationGraph.graphFrames = bvhManager.getNumFrames()
                     annotationGraph.clearGraph()
                     annotationGraph.drawGraph()
+                    bvhManager.reset()
                 } catch (error) {
                     console.error(error)
                 }
