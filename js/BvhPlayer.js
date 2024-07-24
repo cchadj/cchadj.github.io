@@ -126,6 +126,31 @@ class BvhPlayer {
 
 (function($, window, document) {
 
+    /**
+     * @param annotationContainerId
+     * @returns {jQuery|HTMLElement|*}
+     */
+    function createAnnotationContainer(
+        annotationContainerId
+    ) {
+        const fileInputId = `annotationFile-${annotationContainerId}`
+        const propertySelectInputId = `propertySelectInput-${annotationContainerId}`
+        return $(`
+            <div class="annotationBlock">
+                <div class="visualization">
+                    <div class="valueDisplay">0.62</div>
+                    <div class="barContainer">
+                        <div class="featureBar"></div>
+                    </div>
+                </div>
+                <label for="${fileInputId}" class="custom-file-upload btn">
+                    <i class="fas fa-file"></i>
+                    <input type="file" id="${fileInputId}" class="annotationFile" accept="application/json" />
+                </label>
+            </div>
+        `)
+    }
+
     $(function() {
         const vsize = {x: 100, y: 100, z: 0};
         let mouse = {x: 0, y: 0};
@@ -623,35 +648,54 @@ class BvhPlayer {
             }
         });
 
-        $('#annotation-file').on('change', function(evt) {
-            const file = evt.target.files[0];
-            if (!file) return;
+        let annotationContainerCount = 0
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const motionData = JSON.parse(e.target.result);
-                    const strokeStyle = graphLineColours[graphLineColourIdx]
-                    graphLineColourIdx = (graphLineColourIdx + 1) % graphLineColours.length
-                    const annotationGraphLine = new AnnotationGraphLine(
-                        graphCanvasElement,
-                        motionData,
-                        strokeStyle,
-                        5
-                    )
-                    annotationGraph.graphFrames = bvhManager.getNumFrames()
-                    annotationGraph.addGraphLine(annotationGraphLine)
-                    annotationGraph.clearGraph()
-                    annotationGraph.drawGraph()
-                    bvhManager.reset()
-                } catch (error) {
-                    console.error(error)
-                }
-            };
-            reader.readAsText(file);
+        const annotatorIds = [0, 1, 2];
+        annotatorIds.forEach(createAnnotationBlock)
+
+        /**
+         * @param id {number}
+         * @returns {Window.jQuery|HTMLElement|*}
+         */
+        function createAnnotationBlock(id) {
+            const newAnnotationContainer = createAnnotationContainer(id);
+            $('#annotationContainer').append(newAnnotationContainer);
+
+            newAnnotationContainer
+                .find('input[type="file"]')
+                .on('change', function (evt) {
+                    const file = evt.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        try {
+                            const motionData = JSON.parse(e.target.result);
+                            const strokeStyle = graphLineColours[id];
+                            const annotationGraphLine = new AnnotationGraphLine(
+                                graphCanvasElement,
+                                motionData,
+                                strokeStyle,
+                                5
+                            )
+                            annotationGraph.graphFrames = bvhManager.getNumFrames()
+                            annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
+                            annotationGraph.clearGraph()
+                            annotationGraph.drawGraph()
+                            bvhManager.reset()
+                        } catch (error) {
+                            console.error(error)
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+            return newAnnotationContainer;
+        }
+
+        $('#addAnnotationButton').on('click', function () {
+            const annotationContainerId = (annotationContainerCount++).toString();
         });
 
-        // bvhManager.togglePlay();
         init()
     });
 
