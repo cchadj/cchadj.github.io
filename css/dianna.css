@@ -229,17 +229,17 @@ textarea:focus {
   margin: 10px auto;
 }
 
-#annotation-container {
+
+#annotationContainer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row-reverse;
   gap: 10px;
-  justify-content: center;
-  align-items: center;
 
   position: absolute;
   overflow-x: auto;
-  height: 75vh;
-  max-width: 300px;
+  overflow-y: visible;
+  height: 50%;
+  width: 85%;
   right: 0;
   margin-right: 10px;
 
@@ -248,33 +248,84 @@ textarea:focus {
   transform: translateY(-50%);
 }
 
-input#annotation-file[type="file"] {
-  display: none;
+.annotationBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 250px;
 }
+
+.visualization {
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+}
+.valueDisplay {
+  flex-grow: 1;
+}
+.barContainer {
+  width: 30px;
+  flex-grow: 100;
+  background-color: #ddd;
+}
+.featureBar {
+  width: 30px;  /* Bar width reduced to look thinner */
+  background-color: #4CAF50;
+  position: absolute;
+  bottom: 0;
+  transition: height 0.04s linear;
+  flex-grow: 4;
+}
+
 .custom-file-upload {
-  display: inline-block;
-  cursor: pointer;
-  background-color: #007bff;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  text-align: center;
-  font-size: 10px;
+  /*display: inline-block;*/
+  /*cursor: pointer;*/
+  /*background-color: #007bff;*/
+  /*color: white;*/
+  /*padding: 5px 10px;*/
+  /*border-radius: 5px;*/
+  /*text-align: center;*/
+  /*font-size: 10px;*/
 }
 .custom-file-upload:hover {
-  background-color: #0056b3;
+  /*background-color: #0056b3;*/
 }
 .file-label-container {
   text-align: center;
 }
 
-#annotation-file {
-  color: #a2a2a2;
-  text-align: left;
-  font-size:12px;
-  font-weight:normal;
-  text-shadow: 1px 1px 0 #000;
-  width: 50%;
+/*input.annotationFile[type="file"] {*/
+/*  display: none;*/
+/*}*/
+.annotationFile {
+  /*color: #a2a2a2;*/
+  /*text-align: left;*/
+  /*font-size:12px;*/
+  /*font-weight:normal;*/
+  /*text-shadow: 1px 1px 0 #000;*/
+  /*width: 50%;*/
+}
+.annotationFile {
+  display: none;
+}
+
+/* Style the custom button */
+.custom-file-upload.btn {
+  width: 30px;
+  height: 30px;
+  background-color: #007BFF;
+  color: white;
+  display: inline-block;
+  text-align: center;
+  line-height: 30px;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 select {
@@ -282,24 +333,3 @@ select {
   margin-bottom: 10px;
 }
 
-#featureBar {
-  width: 30px;  /* Bar width reduced to look thinner */
-  background-color: #4CAF50;
-  position: absolute;
-  bottom: 0;
-  transition: height 0.04s linear;
-}
-#visualization {
-  /*position: absolute;*/
-  /*right: 20px;*/
-  /*display: flex;*/
-  /*flex-direction: column;*/
-  /*align-items: center;*/
-  margin-bottom: 20px;
-}
-#bar-container {
-  width: 30px;
-  height: 300px;
-  background-color: #ddd;
-  position: relative;
-}

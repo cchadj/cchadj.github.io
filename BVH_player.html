@@ -17,7 +17,7 @@
 	<link rel="shortcut icon" href="res/img/favicon.ico" type="image/x-icon" />
 	<link href="css/dianna.css" rel="stylesheet" type="text/css">
 	<link rel="stylesheet" type="text/css" href="history/history.css" />
-
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
 	<script src="js/three.min.66.js"></script>
@@ -52,25 +52,30 @@
 		<button id="playPauseButton" disabled>Play</button>
 	</div>
 
-	<div id="annotation-container">
-		<div id="visualization">
-			<div id="valueDisplay"></div>
-			<div id="bar-container">
-				<div id="featureBar"></div>
-			</div>
-		</div>
+	<div id="annotationContainer">
 
-		<label for="annotation-file" class="custom-file-upload btn">
-			Choose Annotation File
-		</label>
-		<input type="file" id="annotation-file" accept="application/json" />
+<!--		<div class="annotationBlock">-->
+<!--			<div class="visualization">-->
+<!--				<div class="valueDisplay">0.62</div>-->
+<!--				<div class="barContainer">-->
+<!--					<div class="featureBar"></div>-->
+<!--				</div>-->
+<!--			</div>-->
+<!--			<label for="annotationFile0" class="custom-file-upload btn">-->
+<!--				<i class="fas fa-file"></i>-->
+<!--				<input type="file" id="annotationFile0" class="annotationFile" accept="application/json" />-->
+<!--			</label>-->
+<!--			<label for="propertySelect">-->
+<!--				<select id="propertySelect" disabled>-->
+<!--					<option value="">Select a property</option>-->
+<!--				</select>-->
+<!--			</label>-->
+<!--		</div>-->
 
-		<label for="propertySelect">
-			<select id="propertySelect" disabled>
-				<option value="">Select a property</option>
-			</select>
-		</label>
+<!--		<button id="addAnnotationButton">Add Annotation</button>-->
+
 	</div>
+
 </body>
 
 </html>

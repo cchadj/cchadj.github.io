@@ -1,11 +1,11 @@
 class AnnotationGraph extends Animatable {
     /**
      * @param canvas {HTMLCanvasElement}
-     * @param annotationGraphs {AnnotationGraphLine[]}
+     * @param annotationGraphs {Object.<string, AnnotationGraphLine>}
      */
     constructor(
         canvas,
-        annotationGraphs = [],
+        annotationGraphs = {},
     ) {
         super();
         this.canvas = canvas;
@@ -27,13 +27,14 @@ class AnnotationGraph extends Animatable {
     }
 
     /**
+     * @param id {string}
      * @param annotationGraphLine {AnnotationGraphLine}
      */
-    addGraphLine(annotationGraphLine) {
+    addGraphLine(id, annotationGraphLine) {
         if (annotationGraphLine.getNumFrames() > this.graphFrames) {
             this.graphFrames = annotationGraphLine.getNumFrames();
         }
-        this.lines.push(annotationGraphLine)
+        this.lines[id] = annotationGraphLine
     }
 
     clearGraph() {
@@ -43,23 +44,23 @@ class AnnotationGraph extends Animatable {
     }
 
     drawGraph() {
-        this.lines.forEach(g => { g.maxFrame = this.graphFrames })
-        this.lines.forEach(g => g.drawGraph());
+        Object.values(this.lines).forEach(g => { g.maxFrame = this.graphFrames })
+        Object.values(this.lines).forEach(g => g.drawGraph());
     }
 
     getNumFrames() {
-        const largestAnnotationLine = this.lines.reduce(
+        const largestAnnotationLine = Object.values(this.lines).reduce(
             (acc, current) => {
             return current.getNumFrames() > acc.getNumFrames() ? current : acc;
-        }, this.lines[0]);
+        }, Object.values(this.lines)[0]);
         return largestAnnotationLine?.getNumFrames() || 0 ;
     }
 
     gotoFrame(frame) {
         this.clearGraph()
         this.drawGraph()
-        this.lines.forEach(g => { g.maxFrame = this.graphFrames })
-        this.lines.forEach(g => g.gotoFrame(frame))
+        Object.values(this.lines).forEach(g => { g.maxFrame = this.graphFrames })
+        Object.values(this.lines).forEach(g => g.gotoFrame(frame))
     }
 
     reset() {
