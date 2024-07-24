@@ -1,4 +1,4 @@
-class AnnotationGraphManager extends Animatable {
+class AnnotationGraph extends Animatable {
     /**
      * @param canvas {HTMLCanvasElement}
      * @param annotationGraphs {AnnotationGraphLine[]}
@@ -43,7 +43,7 @@ class AnnotationGraphManager extends Animatable {
     }
 
     drawGraph() {
-        this.lines.forEach(g => { g.maxFrame = this.getNumFrames() })
+        this.lines.forEach(g => { g.maxFrame = this.graphFrames })
         this.lines.forEach(g => g.drawGraph());
     }
 
@@ -58,7 +58,7 @@ class AnnotationGraphManager extends Animatable {
     gotoFrame(frame) {
         this.clearGraph()
         this.drawGraph()
-        this.lines.forEach(g => { g.maxFrame = this.getNumFrames() })
+        this.lines.forEach(g => { g.maxFrame = this.graphFrames })
         this.lines.forEach(g => g.gotoFrame(frame))
     }
 
