@@ -4,56 +4,57 @@
 
     $(function() {
         const bvhReaders = [];
-        var vsize = { x:100, y:100, z:0 };
-        var mouse = { x:0, y:0 };
-        var lightPos, camPos;
+        const vsize = {x: 100, y: 100, z: 0};
+        let mouse = {x: 0, y: 0};
+        let lightPos, camPos;
 
-        var inRender = true, inResize = false, isNeedPause = false;
-        var FAR = 2000;
+        const inRender = true, inResize = false, isNeedPause = false;
+        const FAR = 2000;
 
-        var ToRad = Math.PI / 180;
-        var ToDeg = 180 / Math.PI;
+        const ToRad = Math.PI / 180;
+        const ToDeg = 180 / Math.PI;
 
-        var camera, container, scene, renderer, composer, renderPass, delta, center, centerLight;
-        var ambient, hemiLight, pointLight, light;
-        var body, suit, bodyNeck, bodyHead, head, neck, hair, eyeR, eyeL, teethUp, teethDown, eyeTop, tongue, troat, headBase, fakeNeck, eyesTarget;
+        let camera, container, scene, renderer, composer, renderPass, delta, center, centerLight;
+        let ambient, hemiLight, pointLight, light;
+        let body, suit, bodyNeck, bodyHead, head, neck, hair, eyeR, eyeL, teethUp, teethDown, eyeTop, tongue, troat,
+            headBase, fakeNeck, eyesTarget;
 
-        var materials = [];
-        var clock = new THREE.Clock();
-        var ground;
+        const materials = [];
+        const clock = new THREE.Clock();
+        let ground;
 
-        var gui;
-        var animConfig = {
-            current:"none",
+        let gui;
+        const animConfig = {
+            current: "none",
             //neckmove:false,
-            idle:false,
-            walk:true,
-            salut:false,
-            speed:0.8
-        }
-
-        var viewConfig = {
-            squeleton:false,
-            antialias:false,
-            withEffect:false,
-            withNormal:false,
-            withBump:true
+            idle: false,
+            walk: true,
+            salut: false,
+            speed: 0.8
         };
 
-        var sky;
-        var skyCube;
+        const viewConfig = {
+            squeleton: false,
+            antialias: false,
+            withEffect: false,
+            withNormal: false,
+            withBump: true
+        };
 
-        var debug;
+        let sky;
+        let skyCube;
 
-        var bvhReader = null;
+        let debug;
 
-        var displayModel = true;
-        var squeleton;
-        var bonesReference = [];
+        const bvhReader = null;
+
+        const displayModel = true;
+        let squeleton;
+        const bonesReference = [];
 
 
-        var SeaStandard = false;
-        var BonesRevers = true;
+        const SeaStandard = false;
+        const BonesRevers = true;
 
         function init() {
 
@@ -126,7 +127,7 @@
             container.addEventListener( 'mouseout', onMouseUp, false );
             container.addEventListener( 'mouseup', onMouseUp, false );
 
-            var body = document.body;
+            const body = document.body;
             if( body.addEventListener ){
                 body.addEventListener( 'mousewheel', onMouseWheel, false ); //chrome
                 body.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
@@ -219,12 +220,12 @@
         }
 
         function addBasicObject() {
-            var skyMaterial = new THREE.MeshBasicMaterial( { color: 0x303030, side: THREE.BackSide, depthWrite: false } );
+            const skyMaterial = new THREE.MeshBasicMaterial({color: 0x303030, side: THREE.BackSide, depthWrite: false});
             sky = new THREE.Mesh( new THREE.BoxGeometry( FAR, FAR, FAR ), skyMaterial );
             scene.add( sky );
 
-            var groundMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, transparent: true } );
-            var blendings = [ "NoBlending", "NormalBlending", "AdditiveBlending", "SubtractiveBlending", "MultiplyBlending", "AdditiveAlphaBlending" ];
+            const groundMaterial = new THREE.MeshBasicMaterial({color: 0xFFFFFF, transparent: true});
+            const blendings = ["NoBlending", "NormalBlending", "AdditiveBlending", "SubtractiveBlending", "MultiplyBlending", "AdditiveAlphaBlending"];
             groundMaterial.blending = THREE[ blendings[ 4 ] ];
             ground = new THREE.Mesh(new THREE.PlaneGeometry( 1000, 1000, 4, 4 ), groundMaterial);
             ground.position.set( 0, 0, 0 );
@@ -232,7 +233,7 @@
             ground.receiveShadow = true;
             scene.add( ground );
 
-            var helper2 = new THREE.GridHelper( 100, 50 );
+            const helper2 = new THREE.GridHelper(100, 50);
             helper2.setColors( 0x00ff00, 0x888888 );
             scene.add( helper2 );
         }
@@ -336,13 +337,13 @@
 
 
         function toAngles(o) {
-            var q = o.quaternion.clone();
-            var x = q.x,
+            const q = o.quaternion.clone();
+            const x = q.x,
                 y = q.y,
                 z = q.z,
                 w = q.w;
 
-            var a = 2 * (w * y - z * x);
+            let a = 2 * (w * y - z * x);
 
             if (a < -1) a = -1;
             else if (a > 1) a = 1;
@@ -355,9 +356,9 @@
         }
 
         function traceMatrix(o, n) {
-            var e = o.matrix.elements
-            var s = o.name+"<br>";
-            var q = o.quaternion.clone();
+            const e = o.matrix.elements;
+            let s = o.name + "<br>";
+            const q = o.quaternion.clone();
             //s+=( q.x ).toFixed(2)+ "_"+ ( q.y ).toFixed(2) +  "_"+ (q.z).toFixed(2)+ "_"+  (q.w).toFixed(2);
             //s+=( b.rot.x * ToDeg ).toFixed(2)+ "_"+ ( b.rot.y * ToDeg ).toFixed(2) +  "_"+ ( b.rot.z * ToDeg ).toFixed(2);
 
@@ -398,9 +399,9 @@
         //-----------------------------------
 
         function Orbit(origine, horizontal, vertical, distance) {
-            var p = new THREE.Vector3();
-            var phi = vertical*ToRad;
-            var theta = horizontal*ToRad;
+            const p = new THREE.Vector3();
+            const phi = vertical * ToRad;
+            const theta = horizontal * ToRad;
             p.x = (distance * Math.sin(phi) * Math.cos(theta)) + origine.x;
             p.z = (distance * Math.sin(phi) * Math.sin(theta)) + origine.z;
             p.y = (distance * Math.cos(phi)) + origine.y;
@@ -411,10 +412,10 @@
         // MOUSE & NAVIGATION
         //-----------------------------------
 
-        var changeView = function (h, v, d) {
-            TweenLite.to(camPos, 3, {horizontal: h, vertical: v, distance: d, onUpdate: moveCamera });
+        const changeView = function (h, v, d) {
+            TweenLite.to(camPos, 3, {horizontal: h, vertical: v, distance: d, onUpdate: moveCamera});
             camPos.automove = true;
-        }
+        };
 
         function moveCamera() {
             camera.position.copy(Orbit(center, camPos.horizontal, camPos.vertical, camPos.distance));
@@ -451,7 +452,7 @@
         }
 
         function onMouseWheel(e) {
-            var delta = 0;
+            let delta = 0;
             if(e.wheelDelta){delta=e.wheelDelta*-1;}
             else if(e.detail){delta=e.detail*20;}
             camPos.distance+=(delta/10);
