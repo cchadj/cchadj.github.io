@@ -208,7 +208,7 @@ textarea:focus {
   width: 100%;
 }
 
-#progress-container {
+#progressContainer {
   width: 85%;
   max-width: 800px;
   margin: 10px auto;

@@ -8,9 +8,15 @@ class Animatable {
 
     /**
      * @param frame {number}
-     * @returns {void}
      */
     gotoFrame(frame) {
         throw new Error("Method 'gotoFrame()' must be implemented.");
     }
+
+    /**
+     * @param deltaTime {number}
+     */
+    update(deltaTime) {}
+
+    reset() {}
 }

@@ -9,9 +9,17 @@ class AnnotationGraphManager extends Animatable {
     ) {
         super();
         this.canvas = canvas;
-        console.log(canvas)
         this.ctx = this.canvas.getContext("2d");
         this.lines = annotationGraphs;
+        this._graphFrames = 0
+    }
+
+    get graphFrames() {
+        return this._graphFrames;
+    }
+
+    set graphFrames(value) {
+        this._graphFrames = value;
     }
 
     clearGraphLines() {
@@ -22,7 +30,10 @@ class AnnotationGraphManager extends Animatable {
      * @param annotationGraphLine {AnnotationGraphLine}
      */
     addGraphLine(annotationGraphLine) {
-       this.lines.push(annotationGraphLine)
+        if (annotationGraphLine.getNumFrames() > this.graphFrames) {
+            this.graphFrames = annotationGraphLine.getNumFrames();
+        }
+        this.lines.push(annotationGraphLine)
     }
 
     clearGraph() {
@@ -32,8 +43,8 @@ class AnnotationGraphManager extends Animatable {
     }
 
     drawGraph() {
-        const maxFrames = this.getNumFrames()
-        this.lines.forEach(g => g.drawGraph(maxFrames));
+        this.lines.forEach(g => { g.maxFrame = this.getNumFrames() })
+        this.lines.forEach(g => g.drawGraph());
     }
 
     getNumFrames() {
@@ -45,7 +56,15 @@ class AnnotationGraphManager extends Animatable {
     }
 
     gotoFrame(frame) {
+        this.clearGraph()
+        this.drawGraph()
+        this.lines.forEach(g => { g.maxFrame = this.getNumFrames() })
         this.lines.forEach(g => g.gotoFrame(frame))
+    }
+
+    reset() {
+        this.clearGraph()
+        this.drawGraph()
     }
 
 }

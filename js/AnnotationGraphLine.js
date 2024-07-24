@@ -1,24 +1,44 @@
 
 class AnnotationGraphLine extends Animatable {
     /**
+     * @return {number}
+     */
+    get maxFrame() {
+        return this._maxFrame;
+    }
+
+    /**
+     * @param value {number | null}
+     */
+    set maxFrame(value) {
+        this._maxFrame = value ?? this.getNumFrames();
+        this._maxFrame = Math.max(this._maxFrame, this.getNumFrames())
+    }
+
+    /**
      * @param canvas {HTMLCanvasElement}
      * @param motionObj {{}}
      * @param strokeStyle {string}
      * @param lineWidth {number}
+     * @param maxFrame {number | null}
      */
     constructor(
         canvas,
         motionObj,
         strokeStyle= "#4CAF50",
         lineWidth = 2,
+        maxFrame = null
     ) {
         super();
         this.canvas = canvas;
         this.ctx = this.canvas.getContext("2d");
         this.strokeStyle = strokeStyle;
         this.lineWidth = lineWidth;
-        this.motionObj = motionObj;
-        this.featureKey = Object.keys(this.motionObj)[0];
+        this.motionData = motionObj;
+        this.featureKey = Object.keys(this.motionData)[0];
+        this.maxFrame = maxFrame??  this.getNumFrames();
+        this.frame = 0
+        this._maxFrame = maxFrame;
     }
 
     /**
@@ -28,10 +48,7 @@ class AnnotationGraphLine extends Animatable {
         this.featureKey = featureKey;
     }
 
-    /**
-     * @param maxFrame {number | null}
-     */
-    drawGraph(maxFrame = null) {
+    drawGraph() {
         const width = this.canvas.width;
         const height = this.canvas.height;
 
@@ -44,9 +61,8 @@ class AnnotationGraphLine extends Animatable {
         ctx.strokeStyle = this.strokeStyle
         ctx.lineWidth = this.lineWidth
 
-        maxFrame = maxFrame?? (this.getData().length - 1)
         this.getData().forEach((value, index) => {
-            const x = (index / maxFrame) * width;
+            const x = (index / this.maxFrame) * width;
             const y = height - ((value - min) / range) * height;
 
             if (index === 0) {
@@ -75,7 +91,7 @@ class AnnotationGraphLine extends Animatable {
      * @returns {number[]}
      */
     getData() {
-        return this.motionObj[this.featureKey]
+        return this.motionData[this.featureKey]
     }
 
     getNumFrames() {
@@ -83,6 +99,59 @@ class AnnotationGraphLine extends Animatable {
     }
 
     gotoFrame(frame) {
+        this.frame = frame >= this.getNumFrames()
+            ? this.getNumFrames() - 1
+            : frame;
+        this.updateGraphMarker()
     }
+
+    updateGraphMarker() {
+        if (!this.featureKey || !this.motionData || !this.motionData[this.featureKey]){
+            return;
+        }
+        const x = (this.frame / (this.maxFrame - 1)) * this.canvas.width;
+        const ctx = this.ctx;
+        const canvasHeight = this.canvas.height;
+
+        const min = 0;
+        const max = 1;
+        const value = this.motionData[this.featureKey][this.frame];
+        if (!value)
+            return;
+
+        const range = max - min;
+
+        // ctx.clearRect(0, 0, this.graphCanvas.width, this.graphCanvas.height);
+        //
+        // this.drawGraph();
+
+        ctx.beginPath();
+        // Add y-axis labels
+        ctx.font = '18px Arial';
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        const y = canvasHeight - ((value - min) / range) * canvasHeight;
+        let letterHeight = y  - 15;
+        if ( y > canvasHeight ) {
+            letterHeight = y  + 25;
+        }
+        else if ( y <= 0 ) {
+            letterHeight = y - 25;
+        }
+        // Label for maximum value (1)
+        ctx.fillText(value.toPrecision(2), x, letterHeight);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeight);
+        ctx.stroke();
+    }
+
+    reset() {}
 
 }
