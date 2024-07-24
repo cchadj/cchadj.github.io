@@ -521,9 +521,8 @@
         resizeCanvas(graphCanvasElement, canvasSize.width, canvasSize.height)
 
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
-        const bvhManager = new BVHManager(progressBar);
-        const annotationGraph = new AnnotationGraphManager(graphCanvasElement)
-        bvhManager.addAnimatable(annotationGraph)
+        const annotationGraph = new AnnotationGraph(graphCanvasElement)
+        const bvhManager = new BVHManager(progressBar, annotationGraph);
 
         $('#bvh-file').on('change', function(evt) {
             const files = evt.target.files;
@@ -562,8 +561,8 @@
                         strokeStyle,
                         5
                     )
-                    annotationGraph.addGraphLine(annotationGraphLine)
                     annotationGraph.graphFrames = bvhManager.getNumFrames()
+                    annotationGraph.addGraphLine(annotationGraphLine)
                     annotationGraph.clearGraph()
                     annotationGraph.drawGraph()
                     bvhManager.reset()

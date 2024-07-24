@@ -6,33 +6,38 @@ window.URL = window.URL || window.webkitURL;
 class BVHManager {
 	/**
 	 * @param progressBar {ProgressBar}
-	 * @param bvhReaders {BVHReader[]}
-	 * @param annotationGraphs {AnnotationGraphLine[]}
+	 * @param annotationGraph {AnnotationGraph}
 	 * @param frames_per_second {number}
 	 */
 	constructor(
 		progressBar,
-		bvhReaders = [],
-		annotationGraphs = [],
+		annotationGraph ,
 		frames_per_second = 24.98,
 	) {
-		this.bvhReaders = bvhReaders;
-		this.progressBar = progressBar;
-		this.currentFrame = 0;
-		this.annotationGraphs = annotationGraphs;
+		this._progressBar = progressBar;
+		this._progressBar.setUpdateCallback(this.gotoFrame.bind(this));
+		this._progressBar.setTogglePlayCallback(this.togglePlay.bind(this));
+		this._annotationGraph = annotationGraph;
+
 		/**
 		 * @type {Animatable[]}
 		 */
-		this.animatables = [this.progressBar, ...this.bvhReaders, ...this.annotationGraphs]
+		this.animatables = [this._progressBar, this._annotationGraph]
 
-		this.progressBar.setUpdateCallback(this.gotoFrame.bind(this));
-		this.progressBar.setTogglePlayCallback(this.togglePlay.bind(this));
-
+		this.currentFrame = 0;
 		this.startTimeStamp = 0;
 		this.previousTimeStamp = 0;
 
 		this.timeElapsedSinceLastFrame = 0;
 		this.frames_per_second = frames_per_second;
+	}
+
+	get progressBar() {
+		return this._progressBar;
+	}
+
+	get annotationGraph() {
+		return this._annotationGraph;
 	}
 
 	set frames_per_second(value) {
@@ -54,12 +59,14 @@ class BVHManager {
 	 */
 	addAnimatable(animatable) {
 		this.animatables.push(animatable);
-		const numFrames = animatable.getNumFrames();
-		console.log("numFrames", numFrames);
-		if (numFrames > this.progressBar.numFrames) {
-			console.log("new Max Num Frames", numFrames);
-			this.progressBar.setNumFrames(numFrames);
-		}
+		this.progressBar.setNumFrames(this.getNumFrames());
+		this.annotationGraph.graphFrames = this.getNumFrames();
+		// const numFrames = animatable.getNumFrames();
+		// console.log("numFrames", numFrames);
+		// if (numFrames > this.progressBar.numFrames) {
+		// 	console.log("new Max Num Frames", numFrames);
+		// 	this.progressBar.setNumFrames(numFrames);
+		// }
 	}
 
 	getNumFrames() {
@@ -75,15 +82,15 @@ class BVHManager {
 	 */
 	gotoFrame(frame) {
 		console.log("Frame", frame);
-		this.progressBar.setNumFrames(this.getNumFrames())
+		this._progressBar.setNumFrames(this.getNumFrames())
 		this.currentFrame = frame;
 		this.animatables.forEach(a => a.gotoFrame(frame))
 	}
 
 	togglePlay() {
-		this.progressBar.playing = !this.progressBar.playing;
-		if (this.progressBar.playing) {
-			this.progressBar.setNumFrames(this.getNumFrames())
+		this._progressBar.playing = !this._progressBar.playing;
+		if (this._progressBar.playing) {
+			this._progressBar.setNumFrames(this.getNumFrames())
 			this.startTimeStamp = performance.now()
 			this.previousTimeStamp = this.startTimeStamp
 			this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
@@ -124,7 +131,7 @@ class BVHManager {
 	}
 
 	reset() {
-		this.startTime = Date.now();
+		this.gotoFrame(0)
 		this.animatables.forEach(a => a.reset())
 	}
 
