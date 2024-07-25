@@ -270,17 +270,23 @@ textarea:focus {
   flex-grow: 1;
 }
 .barContainer {
+  display: flex;
+  flex-direction: column-reverse;
+
+  height: 100px;
   width: 30px;
   flex-grow: 100;
   background-color: #ddd;
 }
 .featureBar {
-  width: 30px;  /* Bar width reduced to look thinner */
+  width: 100%;  /* Bar width reduced to look thinner */
+  height: 0;
+  flex-grow: 0;
   background-color: #4CAF50;
-  position: absolute;
-  bottom: 0;
   transition: height 0.04s linear;
-  flex-grow: 4;
+}
+.barContainer:hover .featureBar {
+  flex-grow: 1;  /* Make the bar grow on hover */
 }
 
 .custom-file-upload {

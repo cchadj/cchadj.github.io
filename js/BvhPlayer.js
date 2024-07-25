@@ -70,7 +70,6 @@ class BvhPlayer {
      * @param frame {number}
      */
     gotoFrame(frame) {
-        console.log("Frame", frame);
         this._progressBar.setNumFrames(this.getNumFrames())
         this.currentFrame = frame;
         this.animatables.forEach(a => a.gotoFrame(frame))
@@ -671,17 +670,33 @@ class BvhPlayer {
                     reader.onload = function (e) {
                         try {
                             const motionData = JSON.parse(e.target.result);
-                            const strokeStyle = graphLineColours[id];
+                            const color = graphLineColours[id];
                             const annotationGraphLine = new AnnotationGraphLine(
                                 graphCanvasElement,
                                 motionData,
-                                strokeStyle,
+                                color,
                                 5
+                            )
+                            const valueDisplayElement = newAnnotationContainer
+                                .find(".valueDisplay")
+                                .get(0)
+                            const featureBarElement = newAnnotationContainer
+                                .find(".featureBar")
+                                .get(0)
+                            const valueDisplay = new ValueDisplay(valueDisplayElement)
+                            const featureBar  = new FeatureBar(featureBarElement, 0, color)
+                            const annotationBar = new AnnotationBar(
+                                motionData,
+                                featureBar,
+                                valueDisplay,
+                                null,
+                                color,
                             )
                             annotationGraph.graphFrames = bvhManager.getNumFrames()
                             annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
                             annotationGraph.clearGraph()
                             annotationGraph.drawGraph()
+                            bvhManager.addAnimatable(annotationBar)
                             bvhManager.reset()
                         } catch (error) {
                             console.error(error)
