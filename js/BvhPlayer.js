@@ -422,18 +422,22 @@ class BvhPlayer {
             }
         }
 
-        const graphLineColours = [
-            'rgba(31, 119, 180, 1)',  // Blue
-            'rgba(255, 127, 14, 0.9)',  // Orange
-            'rgba(44, 160, 44, 0.8)',  // Green
-            'rgba(214, 39, 40, 0.7)',  // Red
-            'rgba(148, 103, 189, 0.6)',  // Purple
-            'rgba(140, 86, 75, 0.5)',  // Brown
-            'rgba(227, 119, 194, 0.4)',  // Pink
-            'rgba(127, 127, 127, 0.3)',  // Gray
-            'rgba(188, 189, 34, 0.2)',  // Olive
-            'rgba(23, 190, 207, 0.1)'  // Cyan
-        ];
+        // const graphLineColours = [
+        //     'rgba(31, 119, 180, 1)',  // Blue
+        //     'rgba(255, 127, 14, 0.9)',  // Orange
+        //     'rgba(44, 160, 44, 0.8)',  // Green
+        //     'rgba(214, 39, 40, 0.7)',  // Red
+        //     'rgba(148, 103, 189, 0.6)',  // Purple
+        //     'rgba(140, 86, 75, 0.5)',  // Brown
+        //     'rgba(227, 119, 194, 0.4)',  // Pink
+        //     'rgba(127, 127, 127, 0.3)',  // Gray
+        //     'rgba(188, 189, 34, 0.2)',  // Olive
+        //     'rgba(23, 190, 207, 0.1)'  // Cyan
+        // ];
+
+        const graphLineColours = ['#1f77b4ff', '#ff7f0ee5', '#2ca02ccc', '#d62728b3', '#9467bdbf', '#8c56407f', '#e377c2b3', '#7f7f7f4c', '#bcbd2220', '#17becf1a']
+        const motionColours = graphLineColours.map(c => c.slice(0, c.length - 2))
+
         let graphLineColourIdx = 0;
 
 
@@ -626,14 +630,18 @@ class BvhPlayer {
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
         const bvhManager = new BvhPlayer(progressBar, annotationGraph);
 
+        let loadedAnimationCount = 0;
         $('#bvh-file').on('change', function(evt) {
             const files = evt.target.files;
             if (!files) return;
 
             for (const file of files) {
                 const reader = new FileReader();
+                const color = motionColours[loadedAnimationCount++];
+                const material = new THREE.MeshLambertMaterial({ color }, color);
+                // const material = new THREE.MeshPhongMaterial({color})
                 reader.onload = function(e) {
-                    const bvhReader = new BVHReader(scene);
+                    const bvhReader = new BVHReader(scene, material);
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
                     bvhManager.addAnimatable(bvhReader);

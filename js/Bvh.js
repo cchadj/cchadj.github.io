@@ -9,8 +9,9 @@ class BVHReader extends Animatable{
 	/**
 	 *
 	 * @param scene {THREE.Scene}
+	 * @param material {THREE.Material}
 	 */
-	constructor(scene) {
+	constructor(scene, material = new THREE.MeshNormalMaterial()) {
 		super()
 
 		this.scene = scene
@@ -44,7 +45,8 @@ class BVHReader extends Animatable{
 		this.bones = [];
 		this.boneSize = 0.83;
 
-		this.material = new THREE.MeshNormalMaterial();
+		this.material = material
+		// this.material = new THREE.MeshNormalMaterial();
 
 		this.progressBar = null;
 		this.playPauseButton = null;
