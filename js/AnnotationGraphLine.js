@@ -73,7 +73,7 @@ class AnnotationGraphLine extends Animatable {
         });
 
         // Add y-axis labels
-        ctx.font = '18px Arial';
+        ctx.font = '30px Arial';
         ctx.fillStyle = 'black';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
@@ -127,7 +127,7 @@ class AnnotationGraphLine extends Animatable {
 
         ctx.beginPath();
         // Add y-axis labels
-        ctx.font = '18px Arial';
+        ctx.font = '36px Arial';
         ctx.fillStyle = 'white';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
