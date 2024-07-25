@@ -15,9 +15,12 @@ class BvhPlayer {
         this._annotationGraph = annotationGraph;
 
         /**
-         * @type {Animatable[]}
+         * @type {Object.<string, Animatable>}
          */
-        this.animatables = [this._progressBar, this._annotationGraph]
+        this.animatables = {
+            "progressBar": this._progressBar,
+            "annotationGraph": this._annotationGraph
+        }
 
         this.currentFrame = 0;
         this.startTimeStamp = 0;
@@ -50,16 +53,17 @@ class BvhPlayer {
 
 
     /**
+     * @param id {string}
      * @param animatable {Animatable}
      */
-    addAnimatable(animatable) {
-        this.animatables.push(animatable);
+    addAnimatable(id, animatable) {
+        this.animatables[id] = animatable;
         this.progressBar.setNumFrames(this.getNumFrames());
         this.annotationGraph.graphFrames = this.getNumFrames();
     }
 
     getNumFrames() {
-        const maxFrames = this.animatables.reduce((max, obj) => {
+        const maxFrames = Object.values(this.animatables).reduce((max, obj) => {
             let numFrames = obj.getNumFrames();
             return numFrames > max ? numFrames : max;
         }, 0);
@@ -72,7 +76,7 @@ class BvhPlayer {
     gotoFrame(frame) {
         this._progressBar.setNumFrames(this.getNumFrames())
         this.currentFrame = frame;
-        this.animatables.forEach(a => a.gotoFrame(frame))
+        Object.values(this.animatables).forEach(a => a.gotoFrame(frame))
     }
 
     togglePlay() {
@@ -119,7 +123,7 @@ class BvhPlayer {
 
     reset() {
         this.gotoFrame(1)
-        this.animatables.forEach(a => a.reset())
+        Object.values(this.animatables).forEach(a => a.reset())
     }
 }
 
@@ -637,6 +641,7 @@ class BvhPlayer {
 
             for (const file of files) {
                 const reader = new FileReader();
+                const id = `bvhReader-${loadedAnimationCount}`
                 const color = motionColours[loadedAnimationCount++];
                 const material = new THREE.MeshLambertMaterial({ color }, color);
                 // const material = new THREE.MeshPhongMaterial({color})
@@ -644,7 +649,7 @@ class BvhPlayer {
                     const bvhReader = new BVHReader(scene, material);
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
-                    bvhManager.addAnimatable(bvhReader);
+                    bvhManager.addAnimatable(id, bvhReader);
                     bvhManager.reset();
 
                     annotationGraph.graphFrames = bvhManager.getNumFrames()
@@ -668,6 +673,10 @@ class BvhPlayer {
             const newAnnotationContainer = createAnnotationContainer(id);
             $('#annotationContainer').append(newAnnotationContainer);
 
+            const color = graphLineColours[id];
+            const featureBar = newAnnotationContainer.find(".featureBar")
+            featureBar.css("backgroundColor", color)
+
             newAnnotationContainer
                 .find('input[type="file"]')
                 .on('change', function (evt) {
@@ -678,7 +687,6 @@ class BvhPlayer {
                     reader.onload = function (e) {
                         try {
                             const motionData = JSON.parse(e.target.result);
-                            const color = graphLineColours[id];
                             const annotationGraphLine = new AnnotationGraphLine(
                                 graphCanvasElement,
                                 motionData,
@@ -702,9 +710,11 @@ class BvhPlayer {
                             )
                             annotationGraph.graphFrames = bvhManager.getNumFrames()
                             annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
+                            bvhManager.progressBar.setNumFrames(annotationGraph.getNumFrames())
+                            annotationGraph.graphFrames = bvhManager.getNumFrames()
                             annotationGraph.clearGraph()
                             annotationGraph.drawGraph()
-                            bvhManager.addAnimatable(annotationBar)
+                            bvhManager.addAnimatable(id.toString(), annotationBar)
                             bvhManager.reset()
                         } catch (error) {
                             console.error(error)
