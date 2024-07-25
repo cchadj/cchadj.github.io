@@ -289,19 +289,27 @@ textarea:focus {
   flex-grow: 1;  /* Make the bar grow on hover */
 }
 
-.custom-file-upload {
-  /*display: inline-block;*/
-  /*cursor: pointer;*/
-  /*background-color: #007bff;*/
-  /*color: white;*/
-  /*padding: 5px 10px;*/
-  /*border-radius: 5px;*/
-  /*text-align: center;*/
-  /*font-size: 10px;*/
+.customFileUpload.btn {
+  width: 30px;
+  height: 30px;
+  background-color: #007BFF;
+  color: white;
+  display: inline-block;
+  text-align: center;
+  line-height: 30px;
+  border-radius: 5px;
+  cursor: pointer;
 }
-.custom-file-upload:hover {
-  /*background-color: #0056b3;*/
+.customFileUpload:hover {
+  background-color: #0056b3;
 }
+.customFileUpload.bvh.btn{
+  background-color: #e1cf08;
+}
+.customFileUpload.bvh.btn:hover {
+  background-color: #cbe108;
+}
+
 .file-label-container {
   text-align: center;
 }
@@ -322,17 +330,6 @@ textarea:focus {
 }
 
 /* Style the custom button */
-.custom-file-upload.btn {
-  width: 30px;
-  height: 30px;
-  background-color: #007BFF;
-  color: white;
-  display: inline-block;
-  text-align: center;
-  line-height: 30px;
-  border-radius: 5px;
-  cursor: pointer;
-}
 
 select {
   margin-right: 10px;

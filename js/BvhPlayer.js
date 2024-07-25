@@ -130,15 +130,18 @@ class BvhPlayer {
 (function($, window, document) {
 
     /**
-     * @param annotationContainerId
+     * @param annotationInputId {string}
+     * @param bvhInputId {string}
+     * @param color {string}
      * @returns {jQuery|HTMLElement|*}
      */
     function createAnnotationContainer(
-        annotationContainerId
-    ) {
-        const fileInputId = `annotationFile-${annotationContainerId}`
-        const propertySelectInputId = `propertySelectInput-${annotationContainerId}`
-        return $(`
+        annotationInputId,
+        bvhInputId,
+        color =  "#007BFF"
+
+) {
+        const annotationBlock =  $(`
             <div class="annotationBlock">
                 <div class="visualization">
                     <div class="valueDisplay">0.00</div>
@@ -146,12 +149,20 @@ class BvhPlayer {
                         <div class="featureBar"></div>
                     </div>
                 </div>
-                <label for="${fileInputId}" class="custom-file-upload btn">
+                <label for="${annotationInputId}" class="customFileUpload btn">
                     <i class="fas fa-file"></i>
-                    <input type="file" id="${fileInputId}" class="annotationFile" accept="application/json" />
+                    <input type="file" id="${annotationInputId}" class="annotationFile" accept="application/json" />
+                </label>
+                <label for="${bvhInputId}" class="customFileUpload bvh btn">
+                    <i class="fas fa-walking"></i>
+                    <input type="file" id="${bvhInputId}" class="annotationFile" accept=".bvh" />
                 </label>
             </div>
         `)
+        annotationBlock.find(".btn").css("backgroundColor", color)
+        annotationBlock.find(".featureBar").css("backgroundColor", color)
+
+        return annotationBlock
     }
 
     $(function() {
@@ -426,21 +437,19 @@ class BvhPlayer {
             }
         }
 
-        // const graphLineColours = [
-        //     'rgba(31, 119, 180, 1)',  // Blue
-        //     'rgba(255, 127, 14, 0.9)',  // Orange
-        //     'rgba(44, 160, 44, 0.8)',  // Green
-        //     'rgba(214, 39, 40, 0.7)',  // Red
-        //     'rgba(148, 103, 189, 0.6)',  // Purple
-        //     'rgba(140, 86, 75, 0.5)',  // Brown
-        //     'rgba(227, 119, 194, 0.4)',  // Pink
-        //     'rgba(127, 127, 127, 0.3)',  // Gray
-        //     'rgba(188, 189, 34, 0.2)',  // Olive
-        //     'rgba(23, 190, 207, 0.1)'  // Cyan
-        // ];
-
-        const graphLineColours = ['#1f77b4ff', '#ff7f0ee5', '#2ca02ccc', '#d62728b3', '#9467bdbf', '#8c56407f', '#e377c2b3', '#7f7f7f4c', '#bcbd2220', '#17becf1a']
-        const motionColours = graphLineColours.map(c => c.slice(0, c.length - 2))
+        const annotationColors = [
+            "#1f77b4ff",
+            "#ff7f0ee5",
+            "#2ca02ccc",
+            "#d62728b3",
+            "#9467bdbf",
+            "#8c56407f",
+            "#e377c2b3",
+            "#7f7f7f4c",
+            "#bcbd2220",
+            "#17becf1a"
+        ]
+        const motionColours = annotationColors.map(c => c.slice(0, c.length - 2))
 
         let graphLineColourIdx = 0;
 
@@ -634,22 +643,25 @@ class BvhPlayer {
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
         const bvhManager = new BvhPlayer(progressBar, annotationGraph);
 
-        let loadedAnimationCount = 0;
-        $('#bvh-file').on('change', function(evt) {
-            const files = evt.target.files;
+        /**
+         * @param event {Event}
+         * @param bvhReaderId {string}
+         * @param color {string}
+         */
+        function handleBvhFileInput(event, bvhReaderId, color) {
+            color = color.slice(0, 7)
+            const files = event.target.files;
             if (!files) return;
 
             for (const file of files) {
                 const reader = new FileReader();
-                const id = `bvhReader-${loadedAnimationCount}`
-                const color = motionColours[loadedAnimationCount++];
                 const material = new THREE.MeshLambertMaterial({ color }, color);
                 // const material = new THREE.MeshPhongMaterial({color})
                 reader.onload = function(e) {
                     const bvhReader = new BVHReader(scene, material);
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
-                    bvhManager.addAnimatable(id, bvhReader);
+                    bvhManager.addAnimatable(bvhReaderId, bvhReader);
                     bvhManager.reset();
 
                     annotationGraph.graphFrames = bvhManager.getNumFrames()
@@ -658,7 +670,7 @@ class BvhPlayer {
                 };
                 reader.readAsText(file);
             }
-        });
+        }
 
         let annotationContainerCount = 0
 
@@ -670,16 +682,27 @@ class BvhPlayer {
          * @returns {Window.jQuery|HTMLElement|*}
          */
         function createAnnotationBlock(id) {
-            const newAnnotationContainer = createAnnotationContainer(id);
+            const annotationInputId = `annotationInput-${id}`;
+            const bvhInputId = `bvhInput-${id}`;
+            const annotationColor = annotationColors[id];
+            const newAnnotationContainer = createAnnotationContainer(
+                annotationInputId,
+                bvhInputId,
+                annotationColor
+            );
             $('#annotationContainer').append(newAnnotationContainer);
 
-            const color = graphLineColours[id];
-            const featureBar = newAnnotationContainer.find(".featureBar")
-            featureBar.css("backgroundColor", color)
-
             newAnnotationContainer
-                .find('input[type="file"]')
+                .find(`#${bvhInputId}`)
+                .on("change", function(e) {
+                    const motionColor = motionColours[id];
+                    const bvhReaderId = `bvhReader-${id}`
+                    handleBvhFileInput(e, bvhReaderId, motionColor)
+                })
+            newAnnotationContainer
+                .find(`#${annotationInputId}`)
                 .on('change', function (evt) {
+                    console.log("Hello")
                     const file = evt.target.files[0];
                     if (!file) return;
 
@@ -690,7 +713,7 @@ class BvhPlayer {
                             const annotationGraphLine = new AnnotationGraphLine(
                                 graphCanvasElement,
                                 motionData,
-                                color,
+                                annotationColor,
                                 5
                             )
                             const valueDisplayElement = newAnnotationContainer
@@ -700,13 +723,13 @@ class BvhPlayer {
                                 .find(".featureBar")
                                 .get(0)
                             const valueDisplay = new ValueDisplay(valueDisplayElement)
-                            const featureBar  = new FeatureBar(featureBarElement, 0, color)
+                            const featureBar  = new FeatureBar(featureBarElement, 0, annotationColor)
                             const annotationBar = new AnnotationBar(
                                 motionData,
                                 featureBar,
                                 valueDisplay,
                                 null,
-                                color,
+                                annotationColor,
                             )
                             annotationGraph.graphFrames = bvhManager.getNumFrames()
                             annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
