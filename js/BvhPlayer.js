@@ -141,7 +141,7 @@ class BvhPlayer {
         return $(`
             <div class="annotationBlock">
                 <div class="visualization">
-                    <div class="valueDisplay">0.62</div>
+                    <div class="valueDisplay">0.00</div>
                     <div class="barContainer">
                         <div class="featureBar"></div>
                     </div>
