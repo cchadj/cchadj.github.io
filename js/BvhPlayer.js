@@ -146,7 +146,7 @@ class BvhPlayer {
                         <div class="featureBar"></div>
                     </div>
                 </div>
-                <label for="${fileInputId}" class="custom-file-upload btn">
+                <label for="${fileInputId}" class="custom-file-upload">
                     <i class="fas fa-file"></i>
                     <input type="file" id="${fileInputId}" class="annotationFile" accept="application/json" />
                 </label>
@@ -630,8 +630,14 @@ class BvhPlayer {
         // );
         // resizeCanvas(graphCanvasElement, canvasSize.width, canvasSize.height)
 
+        /**
+         * @type {Annotatable[]}
+         */
+        const annotationComponents = []
+        let selectedFeatureKey = "BODY"
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
+        annotationComponents.push(annotationGraph);
         const bvhManager = new BvhPlayer(progressBar, annotationGraph);
 
         let loadedAnimationCount = 0;
@@ -664,6 +670,41 @@ class BvhPlayer {
 
         const annotatorIds = [0, 1, 2];
         annotatorIds.forEach(createAnnotationBlock)
+
+        /**
+         * @param key {string}
+         */
+        function selectFeatureKey(key) {
+            selectedFeatureKey = key;
+            annotationComponents.forEach(c => c.featureKey = selectedFeatureKey);
+        }
+
+        /**
+         * @param values {string[]}
+         */
+        function populateAnnotationButtonList(values) {
+            const buttonList = $("#annotationButtonsContainer .annotationButtons").first()
+            if (!buttonList) return;
+            if (buttonList.find("button.btn").length > 0) return;
+
+            buttonList.empty()
+            values.forEach(
+                v => {
+                    const btn = `<button class="btn">${v}</button>`
+                    buttonList.append(btn)
+                }
+            )
+
+            const annotationButtons = $('#annotationButtonsContainer .btn')
+            annotationButtons.click(function() {
+                annotationButtons.removeClass('selected');
+                $(this).addClass('selected');
+                const selectedFeatureKey = $(this).text();
+                selectFeatureKey(selectedFeatureKey);
+            });
+            annotationButtons.first().trigger('click');
+
+        }
 
         /**
          * @param id {number}
@@ -705,9 +746,12 @@ class BvhPlayer {
                                 motionData,
                                 featureBar,
                                 valueDisplay,
-                                null,
+                                selectedFeatureKey,
                                 color,
                             )
+                            annotationComponents.push(annotationBar)
+                            const motionKeys = Object.keys(motionData).filter(key => !["START_FRAME", "END_FRAME"].includes(key));
+                            populateAnnotationButtonList(motionKeys)
                             annotationGraph.graphFrames = bvhManager.getNumFrames()
                             annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
                             bvhManager.progressBar.setNumFrames(annotationGraph.getNumFrames())
