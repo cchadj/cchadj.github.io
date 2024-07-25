@@ -243,7 +243,7 @@ textarea:focus {
   right: 0;
   margin-right: 10px;
 
-  top: 50%;
+  top: 40%;
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
 }

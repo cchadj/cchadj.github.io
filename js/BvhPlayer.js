@@ -118,7 +118,7 @@ class BvhPlayer {
     }
 
     reset() {
-        this.gotoFrame(0)
+        this.gotoFrame(1)
         this.animatables.forEach(a => a.reset())
     }
 }
