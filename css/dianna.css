@@ -289,6 +289,27 @@ textarea:focus {
   flex-grow: 1;  /* Make the bar grow on hover */
 }
 
+.customFileUpload.btn {
+  width: 30px;
+  height: 30px;
+  background-color: #007BFF;
+  color: white;
+  display: inline-block;
+  text-align: center;
+  line-height: 30px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.customFileUpload:hover {
+  background-color: #0056b3;
+}
+.customFileUpload.bvh.btn{
+  background-color: #e1cf08;
+}
+.customFileUpload.bvh.btn:hover {
+  background-color: #cbe108;
+}
+
 .file-label-container {
   text-align: center;
 }
