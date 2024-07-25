@@ -772,6 +772,8 @@ class BvhPlayer {
                                 color,
                                 null,
                                 annotationColor,
+                                selectedFeatureKey,
+                                color,
                             )
                             annotationComponents.push(annotationBar)
                             const motionKeys = Object.keys(motionData).filter(key => !["START_FRAME", "END_FRAME"].includes(key));
