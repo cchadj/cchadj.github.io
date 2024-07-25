@@ -614,13 +614,13 @@ class BvhPlayer {
         const graphCanvas = $("canvas#graphCanvas")
         const graphCanvasElement = graphCanvas.get(0)
         const canvasContainer = $("#progressContainer")
-        const canvasSize = fitRectIntoContainer(
-            graphCanvas.width(),
-            graphCanvas.height(),
-            canvasContainer.width(),
-            canvasContainer.height()
-        );
-        resizeCanvas(graphCanvasElement, canvasSize.width, canvasSize.height)
+        // const canvasSize = fitRectIntoContainer(
+        //     graphCanvas.width(),
+        //     graphCanvas.height(),
+        //     canvasContainer.width(),
+        //     canvasContainer.height()
+        // );
+        // resizeCanvas(graphCanvasElement, canvasSize.width, canvasSize.height)
 
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
