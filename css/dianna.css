@@ -330,9 +330,64 @@ textarea:focus {
 }
 
 /* Style the custom button */
+.custom-file-upload {
+  width: 30px;
+  height: 30px;
+  background-color: #007BFF;
+  color: white;
+  display: inline-block;
+  text-align: center;
+  line-height: 30px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.custom-file-upload:hover {
+  background-color: #0056b3;
+}
 
 select {
   margin-right: 10px;
   margin-bottom: 10px;
 }
 
+#annotationButtonsContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  padding: 10px;
+}
+.annotationButtons {
+  display: flex;
+  gap: 15px;
+}
+.btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: bold;
+
+  background-color: #007BFF;
+  color: white;
+  /*background-color: #ffffff;*/
+  /*color: #333333;*/
+  /*border: 2px solid #007bff;*/
+  border: 0;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.01s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.btn:hover {
+  /*background-color: #e6f2ff;*/
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+.selected {
+  /*background-color: #007bff;*/
+  background-color: #0051ff;
+  transform: translateY(-2px);
+  color: white;
+}
+.selected:hover {
+  background-color: #0056b3;
+}
