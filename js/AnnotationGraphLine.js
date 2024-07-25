@@ -1,4 +1,3 @@
-
 class AnnotationGraphLine extends Animatable {
     /**
      * @return {number}
@@ -18,6 +17,7 @@ class AnnotationGraphLine extends Animatable {
     /**
      * @param canvas {HTMLCanvasElement}
      * @param motionObj {{}}
+     * @param featureKey {string | null}
      * @param strokeStyle {string}
      * @param lineWidth {number}
      * @param maxFrame {number | null}
@@ -25,6 +25,7 @@ class AnnotationGraphLine extends Animatable {
     constructor(
         canvas,
         motionObj,
+        featureKey = null,
         strokeStyle= "#4CAF50",
         lineWidth = 2,
         maxFrame = null
@@ -35,7 +36,7 @@ class AnnotationGraphLine extends Animatable {
         this.strokeStyle = strokeStyle;
         this.lineWidth = lineWidth;
         this.motionData = motionObj;
-        this.featureKey = Object.keys(this.motionData)[0];
+        this.featureKey = featureKey?? Object.keys(this.motionData)[0];
         this.maxFrame = maxFrame??  this.getNumFrames();
         this.frame = 0
         this._maxFrame = maxFrame;
@@ -95,7 +96,7 @@ class AnnotationGraphLine extends Animatable {
     }
 
     getNumFrames() {
-        return this.getData().length
+        return this.getData()?.length?? 0
     }
 
     gotoFrame(frame) {

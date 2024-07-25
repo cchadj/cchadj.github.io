@@ -1,4 +1,3 @@
-
 class AnnotationBar extends Animatable {
     /**
      * @param motionData {Object.<string, number[]>}
@@ -21,13 +20,6 @@ class AnnotationBar extends Animatable {
         this.motionData = motionData;
         this.frame = 0;
         this.featureKey = featureKey?? "BODY";
-    }
-
-    /**
-     * @param featureKey {string}
-     */
-    setFeatureKey(featureKey) {
-        this.featureKey = featureKey;
     }
 
     get data() {

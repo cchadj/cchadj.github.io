@@ -2,16 +2,19 @@ class AnnotationGraph extends Animatable {
     /**
      * @param canvas {HTMLCanvasElement}
      * @param annotationGraphs {Object.<string, AnnotationGraphLine>}
+     * @param featureKey {string | null}
      */
     constructor(
         canvas,
         annotationGraphs = {},
+        featureKey
     ) {
         super();
         this.canvas = canvas;
         this.ctx = this.canvas.getContext("2d");
         this.lines = annotationGraphs;
         this._graphFrames = 0
+        this.featureKey = featureKey
     }
 
     get graphFrames() {
@@ -24,6 +27,14 @@ class AnnotationGraph extends Animatable {
 
     clearGraphLines() {
         this.lines = []
+    }
+
+    /**
+     * @param featureKey {string}
+     */
+    set featureKey(featureKey) {
+        this._featureKey = featureKey
+        Object.values(this.lines).forEach(line => line.featureKey = featureKey);
     }
 
     /**
