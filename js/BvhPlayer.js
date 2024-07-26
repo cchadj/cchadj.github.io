@@ -27,7 +27,7 @@ class BvhPlayer {
         this.annotationComponents = {
             "annotationGraph": this._annotationGraph
         };
-        this.selectedFeatureKey = selectedFeatureKey;
+        this.featureKey = selectedFeatureKey;
 
         this.currentFrame = 0;
         this.startTimeStamp = 0;
@@ -61,14 +61,14 @@ class BvhPlayer {
     /**
      * @param value {string}
      */
-    set selectedFeatureKey(value) {
-        this._selectedFeatureKey = value;
-        Object.values(this.annotationComponents).forEach(c => c.featureKey = this._selectedFeatureKey);
+    set featureKey(value) {
+        this._featureKey = value;
+        Object.values(this.annotationComponents).forEach(c => c.featureKey = this.featureKey);
         Object.values(this.annotationComponents).forEach(c => c.reset())
     }
 
-    get selectedFeatureKey() {
-        return this._selectedFeatureKey;
+    get featureKey() {
+        return this._featureKey;
     }
 
     /**
@@ -725,7 +725,7 @@ class BvhPlayer {
                 annotationButtons.removeClass('selected');
                 $(this).addClass('selected');
                 const selectedFeatureKey = $(this).text();
-                bvhPlayer.selectedFeatureKey = selectedFeatureKey;
+                bvhPlayer.featureKey = selectedFeatureKey;
                 // selectFeatureKey(selectedFeatureKey);
             });
             annotationButtons.first().trigger('click');
@@ -767,7 +767,7 @@ class BvhPlayer {
                             const annotationGraphLine = new AnnotationGraphLine(
                                 graphCanvasElement,
                                 motionData,
-                                bvhPlayer.selectedFeatureKey,
+                                bvhPlayer.featureKey,
                                 annotationColor,
                                 5
                             )
@@ -783,7 +783,7 @@ class BvhPlayer {
                                 motionData,
                                 featureBar,
                                 valueDisplay,
-                                bvhPlayer.selectedFeatureKey,
+                                bvhPlayer.featureKey,
                                 annotationColor,
                             )
                             bvhPlayer.addAnnotationComponent(id.toString(), annotationBar)
