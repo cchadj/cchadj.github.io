@@ -256,7 +256,7 @@ class BvhPlayer extends Animatable {
             vsize.y = window.innerHeight;
             vsize.z = vsize.x / vsize.y;
 
-            camPos = { horizontal: 90, vertical: 80, distance: 200, automove: false };
+            camPos = { horizontal: 90, vertical: 65, distance: 200, automove: false };
             lightPos = { horizontal: 135, vertical: 35, distance: 200 };
             mouse = { ox:0, oy:0, h:0, v:0, mx:0, my:0, down:false, over:false, moving:true, dx:0, dy:0 };
 
@@ -298,7 +298,7 @@ class BvhPlayer extends Animatable {
             // CAMERA
             camera = new THREE.PerspectiveCamera( 45, vsize.z, 1, FAR );
             //camera.position.set( 0, 30, 100 );
-            center = new THREE.Vector3(0,30,0);
+            center = new THREE.Vector3(0, -15, 0);
             centerLight =  new THREE.Vector3(0,-45,0);
             moveCamera();
 
@@ -435,7 +435,9 @@ class BvhPlayer extends Animatable {
             debug:true,
             speed:1.3,
             size:1,
-            px:0, py:-22, pz:0,
+            px:0,
+            py:-22,
+            pz:0,
             boneSize:0.83
         }
 
