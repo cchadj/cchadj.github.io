@@ -7,6 +7,7 @@ class ProgressBar extends Animatable {
         super()
         this.progressBar = document.getElementById(progressBarId);
         this.playPauseButton = document.getElementById(playPauseButtonId);
+        this.playPauseIcon = this.playPauseButton.querySelector("i");
         this.numFrames = 0;
         this.playing = false;
 
@@ -53,7 +54,9 @@ class ProgressBar extends Animatable {
         if (this.onTogglePlayCallback) {
             this.onTogglePlayCallback();
         }
-        this.playPauseButton.textContent = this.playing ? 'Pause' : 'Play';
+        this.playPauseIcon.className = this.playing
+            ? "fas fa-pause"
+            : "fas fa-play";
     }
 
     getNumFrames() {
