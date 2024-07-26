@@ -806,10 +806,6 @@ class BvhPlayer {
             return newAnnotationContainer;
         }
 
-        $('#addAnnotationButton').on('click', function () {
-            const annotationContainerId = (annotationContainerCount++).toString();
-        });
-
         init()
     });
 
