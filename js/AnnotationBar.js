@@ -19,7 +19,21 @@ class AnnotationBar extends Animatable {
         this.valueDisplay = valueDisplay;
         this.motionData = motionData;
         this.frame = 0;
-        this.featureKey = featureKey?? "BODY";
+        this._featureKey = featureKey?? "BODY";
+    }
+
+    /**
+     * @returns {string}
+     */
+    get featureKey() {
+        return this._featureKey;
+    }
+
+    /**
+     * @param value {string}
+     */
+    set featureKey(value) {
+        this._featureKey = value;
     }
 
     get data() {
@@ -62,6 +76,8 @@ class AnnotationBar extends Animatable {
         }
     }
 
-    reset() {}
+    reset() {
+        this.gotoFrame(this.frame)
+    }
 
 }
