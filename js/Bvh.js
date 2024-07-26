@@ -28,7 +28,7 @@ class BVHReader extends Animatable{
 		this.root = null;
 		this.numFrames = 0;
 		this.secsPerFrame = 0;
-		this.play = false;
+		// this.play = false;
 		this.channels = null;
 		this.lines = "";
 
@@ -36,7 +36,7 @@ class BVHReader extends Animatable{
 
 		this.nodes = null;
 
-		this.frame = 0;
+		this._frame = 0;
 		this.oldFrame = 0;
 		this.startTime = 0;
 
@@ -174,11 +174,11 @@ class BVHReader extends Animatable{
 
 		this.getNodeList();
 		this.startTime = Date.now();
-		this.play = true;
+		// this.play = true;
 
-		if (this.progressBar) this.progressBar.disabled = false;
-		if (this.playPauseButton) this.playPauseButton.disabled = false;
-		this.togglePlay();
+		// if (this.progressBar) this.progressBar.disabled = false;
+		// if (this.playPauseButton) this.playPauseButton.disabled = false;
+		// this.togglePlay();
 	}
 
 	/**
@@ -326,6 +326,10 @@ class BVHReader extends Animatable{
 		return node;
 	}
 
+	remove() {
+		this.scene.remove(this.skeleton)
+	}
+
 	clearNode() {
 		if (out2) out2.innerHTML = "";
 
@@ -468,25 +472,22 @@ class BVHReader extends Animatable{
 
 	reset() {
 		this.oldFrame = 0;
-		this.frame = 1;
+		this.gotoFrame(1)
 		this.rePosition(this.resetPosition);
-		// this.rePosition(new THREE.Vector3(-100, -22, 0));
-		this.animate();
-		this.update(1);
 	}
 
 	next() {
-		this.play = false;
-		this.frame++;
-		if (this.frame > this.numFrames) this.frame = 0;
-		this.animate();
+		// this.play = false;
+		this.gotoFrame(this.frame + 1);
+		// if (this.frame > this.numFrames) this.frame = 0;
+		// this.animate();
 	}
 
 	prev() {
-		this.play = false;
-		this.frame--;
-		if (this.frame < 0) this.frame = this.numFrames;
-		this.animate();
+		// this.play = false;
+		this.gotoFrame(this.frame - 1);
+		// if (this.frame < 0) this.frame = this.numFrames;
+		// this.animate();
 	}
 
 	initUI(progressBarId, playPauseButtonId, featureBarId) {
@@ -501,45 +502,22 @@ class BVHReader extends Animatable{
 	 * @param frame {number}
 	 */
 	gotoFrame(frame) {
-		if (frame >= this.numFrames) {
-			this.play = false;
-			frame = this.numFrames - 1;
-		}
-		this.frame = frame;
+		super.gotoFrame(frame)
+
 		this.animate();
 	}
 
-	// gotoFrame(frame) {
-	// 	this.frame = frame;
-	// 	this.animate();
-	// 	this.updateFeatureBar();
-	// 	this.update();
+	// togglePlay() {
+	// 	this.play = !this.play;
+	// 	if (this.play) {
+	// 		this.playPauseButton.textContent = 'Pause';
+	// 		this.oldFrame = this.frame;
+	// 		this.startTime = Date.now();
+	// 		this.play = true;
+	// 	} else {
+	// 		this.playPauseButton.textContent = 'Play';
+	// 	}
 	// }
-
-	togglePlay() {
-		this.play = !this.play;
-		if (this.play) {
-			this.playPauseButton.textContent = 'Pause';
-			this.oldFrame = this.frame;
-			this.startTime = Date.now();
-			this.play = true;
-		} else {
-			this.playPauseButton.textContent = 'Play';
-		}
-	}
-
-	/**
-	 * @param frame {number}
-	 */
-	update(frame) {
-		if (frame > this.numFrames) {
-			this.play = false;
-			this.frame = this.numFrames - 1;
-			return;
-		}
-		this.frame = frame;
-		this.animate();
-	}
 }
 
 BVH.DistanceTest = function(p1, p2) {

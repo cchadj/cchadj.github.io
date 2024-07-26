@@ -15,6 +15,7 @@ class AnnotationGraph extends Animatable {
         this.lines = annotationGraphs;
         this._graphFrames = 0
         this.featureKey = featureKey
+        this._frame = 0
     }
 
     get graphFrames() {

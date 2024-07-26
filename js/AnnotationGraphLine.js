@@ -38,7 +38,7 @@ class AnnotationGraphLine extends Animatable {
         this.motionData = motionObj;
         this.featureKey = featureKey?? Object.keys(this.motionData)[0];
         this.maxFrame = maxFrame??  this.getNumFrames();
-        this.frame = 0
+        this._frame = 0
         this._maxFrame = maxFrame;
     }
 
@@ -100,9 +100,8 @@ class AnnotationGraphLine extends Animatable {
     }
 
     gotoFrame(frame) {
-        this.frame = frame >= this.getNumFrames()
-            ? this.getNumFrames() - 1
-            : frame;
+        super.gotoFrame(frame)
+
         this.updateGraphMarker()
     }
 
