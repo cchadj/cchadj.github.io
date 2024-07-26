@@ -472,8 +472,8 @@ class BVHReader extends Animatable{
 
 	reset() {
 		this.oldFrame = 0;
-		this.gotoFrame(1)
 		this.rePosition(this.resetPosition);
+		this.gotoFrame(1)
 	}
 
 	next() {
