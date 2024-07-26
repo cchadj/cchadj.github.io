@@ -1,4 +1,4 @@
-class BvhPlayer {
+class BvhPlayer extends Animatable {
     /**
      * @param progressBar {ProgressBar}
      * @param annotationGraph {AnnotationGraph}
@@ -11,6 +11,7 @@ class BvhPlayer {
         frames_per_second = 24.98,
         selectedFeatureKey = "BODY"
     ) {
+        super()
         this._progressBar = progressBar;
         this._progressBar.setUpdateCallback(this.gotoFrame.bind(this));
         this._progressBar.setTogglePlayCallback(this.togglePlay.bind(this));
@@ -29,12 +30,16 @@ class BvhPlayer {
         };
         this.featureKey = selectedFeatureKey;
 
-        this.currentFrame = 0;
+        this._frame = 0;
         this.startTimeStamp = 0;
         this.previousTimeStamp = 0;
 
         this.timeElapsedSinceLastFrame = 0;
         this.frames_per_second = frames_per_second;
+    }
+
+    get frame() {
+        return this._frame
     }
 
     get progressBar() {
@@ -64,7 +69,7 @@ class BvhPlayer {
     set featureKey(value) {
         this._featureKey = value;
         Object.values(this.annotationComponents).forEach(c => c.featureKey = this.featureKey);
-        const prevFrame = this.currentFrame
+        const prevFrame = this.frame
         this.reset()
         this.gotoFrame(prevFrame)
     }
@@ -86,9 +91,22 @@ class BvhPlayer {
      * @param animatable {Animatable}
      */
     addAnimatable(id, animatable) {
+        this._progressBar.enable()
         this.animatables[id] = animatable;
-        this.progressBar.setNumFrames(this.getNumFrames());
-        this.annotationGraph.graphFrames = this.getNumFrames();
+        // set the progress bar frames to the maximum of all animatables ( except the progressBar itself )
+        const maxFrames = Object.entries(this.animatables)
+            .reduce((max, [key, animatable]) => {
+                if (key === "progressBar") {
+                    return 0;
+                }
+                let numFrames = animatable.getNumFrames();
+                return numFrames > max ? numFrames : max;
+        }, 0);
+        this.progressBar.setNumFrames(maxFrames);
+        this.annotationGraph.graphFrames = maxFrames;
+        if (this.frame >= maxFrames) {
+            this.gotoFrame(maxFrames - 1)
+        }
     }
 
     getNumFrames() {
@@ -103,15 +121,14 @@ class BvhPlayer {
      * @param frame {number}
      */
     gotoFrame(frame) {
-        this._progressBar.setNumFrames(this.getNumFrames())
-        this.currentFrame = frame;
+        super.gotoFrame(frame)
+
         Object.values(this.animatables).forEach(a => a.gotoFrame(frame))
     }
 
     togglePlay() {
         this._progressBar.playing = !this._progressBar.playing;
         if (this._progressBar.playing) {
-            this._progressBar.setNumFrames(this.getNumFrames())
             this.startTimeStamp = performance.now()
             this.previousTimeStamp = this.startTimeStamp
             this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
@@ -129,8 +146,7 @@ class BvhPlayer {
         this.timeElapsedSinceLastFrame += deltaTime;
 
         if (this.timeElapsedSinceLastFrame >= this.seconds_per_frame) {
-            this.currentFrame += 1;
-            this.gotoFrame(this.currentFrame)
+            this.gotoFrame(this.frame + 1)
             this.timeElapsedSinceLastFrame -= this.seconds_per_frame;
         }
     }
@@ -675,6 +691,10 @@ class BvhPlayer {
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
         const bvhPlayer = new BvhPlayer(progressBar, annotationGraph);
+        /**
+         * @type {Object.<string, BVHReader>}
+         */
+        const bvhReaders = {}
 
         /**
          * @param event {Event}
@@ -697,11 +717,12 @@ class BvhPlayer {
                 const material = new THREE.MeshLambertMaterial({ color }, color);
                 // const material = new THREE.MeshPhongMaterial({color})
                 reader.onload = function(e) {
-                    const bvhReader = new BVHReader(scene, material, resetPosition);
+                    const bvhReader =  bvhReaders[bvhReaderId] || new BVHReader(scene, material, resetPosition);
+                    bvhReaders[bvhReaderId] = bvhReader;
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
                     bvhPlayer.addAnimatable(bvhReaderId, bvhReader);
-                    bvhPlayer.reset(bvhPlayer.currentFrame);
+                    bvhPlayer.reset(bvhPlayer.frame);
 
                     annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                     annotationGraph.clearGraph()
@@ -828,12 +849,12 @@ class BvhPlayer {
                             activateAnnotationButtons()
                             annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                             annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
-                            bvhPlayer.progressBar.setNumFrames(annotationGraph.getNumFrames())
+                            // bvhPlayer.progressBar.setNumFrames(annotationGraph.getNumFrames())
                             annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                             annotationGraph.clearGraph()
                             annotationGraph.drawGraph()
                             bvhPlayer.addAnimatable(id.toString(), annotationBar)
-                            bvhPlayer.reset(bvhPlayer.currentFrame)
+                            bvhPlayer.reset(bvhPlayer.frame)
                         } catch (error) {
                             console.error(error)
                         }

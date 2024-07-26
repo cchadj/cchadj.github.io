@@ -17,6 +17,11 @@ class ProgressBar extends Animatable {
         this.playPauseButton.addEventListener('click', this.togglePlay.bind(this));
     }
 
+    enable() {
+        this.progressBar.disabled = false;
+        this.playPauseButton.disabled = false;
+    }
+
     onInput() {
         if (this.onUpdateCallback) {
             this.onUpdateCallback(Math.floor(this.progressBar.value * this.numFrames / 100));
@@ -56,6 +61,9 @@ class ProgressBar extends Animatable {
     }
 
     gotoFrame(frame) {
-        this.progressBar.value = (frame / this.numFrames) * 100;
+
+        super.gotoFrame(frame)
+
+        this.progressBar.value = (this.frame / this.numFrames) * 100;
     }
 }
