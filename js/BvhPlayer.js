@@ -668,7 +668,7 @@ class BvhPlayer {
 
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
-        const bvhManager = new BvhPlayer(progressBar, annotationGraph);
+        const bvhPlayer = new BvhPlayer(progressBar, annotationGraph);
 
         /**
          * @param event {Event}
@@ -688,10 +688,10 @@ class BvhPlayer {
                     const bvhReader = new BVHReader(scene, material);
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
-                    bvhManager.addAnimatable(bvhReaderId, bvhReader);
-                    bvhManager.reset();
+                    bvhPlayer.addAnimatable(bvhReaderId, bvhReader);
+                    bvhPlayer.reset();
 
-                    annotationGraph.graphFrames = bvhManager.getNumFrames()
+                    annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                     annotationGraph.clearGraph()
                     annotationGraph.drawGraph()
                 };
@@ -725,7 +725,7 @@ class BvhPlayer {
                 annotationButtons.removeClass('selected');
                 $(this).addClass('selected');
                 const selectedFeatureKey = $(this).text();
-                bvhManager.selectedFeatureKey = selectedFeatureKey;
+                bvhPlayer.selectedFeatureKey = selectedFeatureKey;
                 // selectFeatureKey(selectedFeatureKey);
             });
             annotationButtons.first().trigger('click');
@@ -767,7 +767,7 @@ class BvhPlayer {
                             const annotationGraphLine = new AnnotationGraphLine(
                                 graphCanvasElement,
                                 motionData,
-                                bvhManager.selectedFeatureKey,
+                                bvhPlayer.selectedFeatureKey,
                                 annotationColor,
                                 5
                             )
@@ -783,20 +783,20 @@ class BvhPlayer {
                                 motionData,
                                 featureBar,
                                 valueDisplay,
-                                bvhManager.selectedFeatureKey,
+                                bvhPlayer.selectedFeatureKey,
                                 annotationColor,
                             )
-                            bvhManager.addAnnotationComponent(id.toString(), annotationBar)
+                            bvhPlayer.addAnnotationComponent(id.toString(), annotationBar)
                             const motionKeys = Object.keys(motionData).filter(key => !["START_FRAME", "END_FRAME"].includes(key));
                             populateAnnotationButtonList(motionKeys)
-                            annotationGraph.graphFrames = bvhManager.getNumFrames()
+                            annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                             annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
-                            bvhManager.progressBar.setNumFrames(annotationGraph.getNumFrames())
-                            annotationGraph.graphFrames = bvhManager.getNumFrames()
+                            bvhPlayer.progressBar.setNumFrames(annotationGraph.getNumFrames())
+                            annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                             annotationGraph.clearGraph()
                             annotationGraph.drawGraph()
-                            bvhManager.addAnimatable(id.toString(), annotationBar)
-                            bvhManager.reset()
+                            bvhPlayer.addAnimatable(id.toString(), annotationBar)
+                            bvhPlayer.reset()
                         } catch (error) {
                             console.error(error)
                         }
