@@ -64,7 +64,7 @@ class BvhPlayer {
     set featureKey(value) {
         this._featureKey = value;
         Object.values(this.annotationComponents).forEach(c => c.featureKey = this.featureKey);
-        Object.values(this.annotationComponents).forEach(c => c.reset())
+        this.reset()
     }
 
     get featureKey() {
@@ -151,6 +151,7 @@ class BvhPlayer {
     reset() {
         this.gotoFrame(1)
         Object.values(this.animatables).forEach(a => a.reset())
+        Object.values(this.annotationComponents).forEach(a => a.reset())
     }
 }
 
