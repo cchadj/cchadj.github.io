@@ -10,8 +10,13 @@ class BVHReader extends Animatable{
 	 *
 	 * @param scene {THREE.Scene}
 	 * @param material {THREE.Material}
+	 * @param resetPosition {THREE.Vector3}
 	 */
-	constructor(scene, material = new THREE.MeshNormalMaterial()) {
+	constructor(
+		scene,
+		material = new THREE.MeshNormalMaterial(),
+		resetPosition = new THREE.Vector3(0, 0, 0)
+	) {
 		super()
 
 		this.scene = scene
@@ -36,6 +41,7 @@ class BVHReader extends Animatable{
 		this.startTime = 0;
 
 		this.position = new THREE.Vector3(0, 0, 0);
+		this.resetPosition = resetPosition
 		this.scale = 1;
 
 		this.tmpOrder = "";
@@ -463,9 +469,10 @@ class BVHReader extends Animatable{
 	reset() {
 		this.oldFrame = 0;
 		this.frame = 1;
-		this.rePosition(new THREE.Vector3(0, -22, 0));
+		this.rePosition(this.resetPosition);
+		// this.rePosition(new THREE.Vector3(-100, -22, 0));
 		this.animate();
-		this.update();
+		this.update(1);
 	}
 
 	next() {
