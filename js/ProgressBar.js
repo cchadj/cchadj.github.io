@@ -21,6 +21,13 @@ class ProgressBar extends Animatable {
     enable() {
         this.progressBar.disabled = false;
         this.playPauseButton.disabled = false;
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                event.preventDefault(); // Prevent the default space bar action (scrolling)
+                this.playPauseButton.click(); // Trigger the specific button's click event
+            }
+        });
     }
 
     onInput() {
