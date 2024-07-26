@@ -7,7 +7,7 @@ class AnnotationGraph extends Animatable {
     constructor(
         canvas,
         annotationGraphs = {},
-        featureKey
+        featureKey = null
     ) {
         super();
         this.canvas = canvas;

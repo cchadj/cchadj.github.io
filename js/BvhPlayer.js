@@ -3,11 +3,13 @@ class BvhPlayer {
      * @param progressBar {ProgressBar}
      * @param annotationGraph {AnnotationGraph}
      * @param frames_per_second {number}
+     * @param selectedFeatureKey {string}
      */
     constructor(
         progressBar,
         annotationGraph,
         frames_per_second = 24.98,
+        selectedFeatureKey = "BODY"
     ) {
         this._progressBar = progressBar;
         this._progressBar.setUpdateCallback(this.gotoFrame.bind(this));
@@ -21,6 +23,11 @@ class BvhPlayer {
             "progressBar": this._progressBar,
             "annotationGraph": this._annotationGraph
         }
+
+        this.annotationComponents = {
+            "annotationGraph": this._annotationGraph
+        };
+        this.selectedFeatureKey = selectedFeatureKey;
 
         this.currentFrame = 0;
         this.startTimeStamp = 0;
@@ -51,6 +58,26 @@ class BvhPlayer {
         return this._seconds_per_frame;
     }
 
+    /**
+     * @param value {string}
+     */
+    set selectedFeatureKey(value) {
+        this._selectedFeatureKey = value;
+        Object.values(this.annotationComponents).forEach(c => c.featureKey = this._selectedFeatureKey);
+        Object.values(this.annotationComponents).forEach(c => c.reset())
+    }
+
+    get selectedFeatureKey() {
+        return this._selectedFeatureKey;
+    }
+
+    /**
+     * @param id {string}
+     * @param annotationComponent
+     */
+    addAnnotationComponent(id, annotationComponent) {
+        this.annotationComponents[id] = annotationComponent;
+    }
 
     /**
      * @param id {string}
@@ -149,17 +176,17 @@ class BvhPlayer {
                         <div class="featureBar"></div>
                     </div>
                 </div>
-                <label for="${annotationInputId}" class="customFileUpload btn">
+                <label for="${annotationInputId}" class="customFileUpload">
                     <i class="fas fa-file"></i>
                     <input type="file" id="${annotationInputId}" class="annotationFile" accept="application/json" />
                 </label>
-                <label for="${bvhInputId}" class="customFileUpload bvh btn">
+                <label for="${bvhInputId}" class="customFileUpload bvh">
                     <i class="fas fa-walking"></i>
                     <input type="file" id="${bvhInputId}" class="annotationFile" accept=".bvh" />
                 </label>
             </div>
         `)
-        annotationBlock.find(".btn").css("backgroundColor", color)
+        annotationBlock.find(".customFileUpload").css("backgroundColor", color)
         annotationBlock.find(".featureBar").css("backgroundColor", color)
 
         return annotationBlock
@@ -639,14 +666,8 @@ class BvhPlayer {
         // );
         // resizeCanvas(graphCanvasElement, canvasSize.width, canvasSize.height)
 
-        /**
-         * @type {Annotatable[]}
-         */
-        const annotationComponents = []
-        let selectedFeatureKey = "BODY"
         const progressBar = new ProgressBar('progressBar', 'playPauseButton');
         const annotationGraph = new AnnotationGraph(graphCanvasElement)
-        annotationComponents.push(annotationGraph);
         const bvhManager = new BvhPlayer(progressBar, annotationGraph);
 
         /**
@@ -684,14 +705,6 @@ class BvhPlayer {
         annotatorIds.forEach(createAnnotationBlock)
 
         /**
-         * @param key {string}
-         */
-        function selectFeatureKey(key) {
-            selectedFeatureKey = key;
-            annotationComponents.forEach(c => c.featureKey = selectedFeatureKey);
-        }
-
-        /**
          * @param values {string[]}
          */
         function populateAnnotationButtonList(values) {
@@ -712,7 +725,8 @@ class BvhPlayer {
                 annotationButtons.removeClass('selected');
                 $(this).addClass('selected');
                 const selectedFeatureKey = $(this).text();
-                selectFeatureKey(selectedFeatureKey);
+                bvhManager.selectedFeatureKey = selectedFeatureKey;
+                // selectFeatureKey(selectedFeatureKey);
             });
             annotationButtons.first().trigger('click');
 
@@ -753,6 +767,7 @@ class BvhPlayer {
                             const annotationGraphLine = new AnnotationGraphLine(
                                 graphCanvasElement,
                                 motionData,
+                                bvhManager.selectedFeatureKey,
                                 annotationColor,
                                 5
                             )
@@ -768,12 +783,10 @@ class BvhPlayer {
                                 motionData,
                                 featureBar,
                                 valueDisplay,
-                                selectedFeatureKey,
+                                bvhManager.selectedFeatureKey,
                                 annotationColor,
-                                selectedFeatureKey,
-                                color,
                             )
-                            annotationComponents.push(annotationBar)
+                            bvhManager.addAnnotationComponent(id.toString(), annotationBar)
                             const motionKeys = Object.keys(motionData).filter(key => !["START_FRAME", "END_FRAME"].includes(key));
                             populateAnnotationButtonList(motionKeys)
                             annotationGraph.graphFrames = bvhManager.getNumFrames()
