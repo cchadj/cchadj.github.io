@@ -69,9 +69,7 @@ class BvhPlayer extends Animatable {
     set featureKey(value) {
         this._featureKey = value;
         Object.values(this.annotationComponents).forEach(c => c.featureKey = this.featureKey);
-        const prevFrame = this.frame
-        this.reset()
-        this.gotoFrame(prevFrame)
+        this.reset(this.frame)
     }
 
     get featureKey() {
