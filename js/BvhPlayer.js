@@ -705,6 +705,21 @@ class BvhPlayer {
         const annotatorIds = [0, 1, 2];
         annotatorIds.forEach(createAnnotationBlock)
 
+        function activateAnnotationButtons() {
+            const buttons = $("#annotationButtonsContainer .annotationButtons .btn")
+            buttons.each(function (button, i) {
+                $(this).prop("disabled", false);
+            })
+
+            buttons.click(function() {
+                buttons.removeClass('selected');
+                $(this).addClass('selected');
+                const selectedFeatureKey = $(this).text();
+                bvhPlayer.featureKey = selectedFeatureKey;
+            });
+            buttons.first().trigger('click');
+        }
+
         /**
          * @param values {string[]}
          */
@@ -727,10 +742,8 @@ class BvhPlayer {
                 $(this).addClass('selected');
                 const selectedFeatureKey = $(this).text();
                 bvhPlayer.featureKey = selectedFeatureKey;
-                // selectFeatureKey(selectedFeatureKey);
             });
             annotationButtons.first().trigger('click');
-
         }
 
         /**
@@ -788,8 +801,9 @@ class BvhPlayer {
                                 annotationColor,
                             )
                             bvhPlayer.addAnnotationComponent(id.toString(), annotationBar)
-                            const motionKeys = Object.keys(motionData).filter(key => !["START_FRAME", "END_FRAME"].includes(key));
-                            populateAnnotationButtonList(motionKeys)
+                            // const motionKeys = Object.keys(motionData).filter(key => !["START_FRAME", "END_FRAME"].includes(key));
+                            // populateAnnotationButtonList(motionKeys)
+                            activateAnnotationButtons()
                             annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                             annotationGraph.addGraphLine(id.toString(), annotationGraphLine)
                             bvhPlayer.progressBar.setNumFrames(annotationGraph.getNumFrames())
