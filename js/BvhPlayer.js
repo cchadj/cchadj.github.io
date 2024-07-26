@@ -64,7 +64,9 @@ class BvhPlayer {
     set featureKey(value) {
         this._featureKey = value;
         Object.values(this.annotationComponents).forEach(c => c.featureKey = this.featureKey);
+        const prevFrame = this.currentFrame
         this.reset()
+        this.gotoFrame(prevFrame)
     }
 
     get featureKey() {
@@ -148,10 +150,16 @@ class BvhPlayer {
         this.currentAnimationFrame = requestAnimationFrame(this.updateHelper.bind(this));
     }
 
-    reset() {
+    /**
+     * @param frameAfterReset {number | null}
+     */
+    reset(frameAfterReset = null) {
         this.gotoFrame(1)
         Object.values(this.animatables).forEach(a => a.reset())
         Object.values(this.annotationComponents).forEach(a => a.reset())
+        if (frameAfterReset) {
+            this.gotoFrame(frameAfterReset)
+        }
     }
 }
 
@@ -241,9 +249,6 @@ class BvhPlayer {
             if(SeaStandard)lightPos.horizontal+=180;
 
             debug = document.getElementById("debug");
-
-            // document.getElementById('bvh-file').addEventListener('change', handleBvhFileSelect, false);
-            // document.getElementById('annotation-file').addEventListener('change', handleAnnotationFileSelect, false);
 
             addGUI();
 
@@ -696,7 +701,7 @@ class BvhPlayer {
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
                     bvhPlayer.addAnimatable(bvhReaderId, bvhReader);
-                    bvhPlayer.reset();
+                    bvhPlayer.reset(bvhPlayer.currentFrame);
 
                     annotationGraph.graphFrames = bvhPlayer.getNumFrames()
                     annotationGraph.clearGraph()
@@ -713,7 +718,12 @@ class BvhPlayer {
 
         function activateAnnotationButtons() {
             const buttons = $("#annotationButtonsContainer .annotationButtons .btn")
-            buttons.each(function (button, i) {
+            const isAnyButtonDisabled = buttons.filter(":disabled").length > 0
+            if (!isAnyButtonDisabled) {
+                return
+            }
+
+            buttons.each(function() {
                 $(this).prop("disabled", false);
             })
 
@@ -823,7 +833,7 @@ class BvhPlayer {
                             annotationGraph.clearGraph()
                             annotationGraph.drawGraph()
                             bvhPlayer.addAnimatable(id.toString(), annotationBar)
-                            bvhPlayer.reset()
+                            bvhPlayer.reset(bvhPlayer.currentFrame)
                         } catch (error) {
                             console.error(error)
                         }
