@@ -268,7 +268,7 @@ class BvhPlayer {
             renderer.shadowMapType = THREE.PCFSoftShadowMap;
 
             container = document.getElementById("viewport");
-            container.appendChild( renderer.domElement );
+            container?.appendChild( renderer.domElement );
             renderer.domElement.style.top = 0 + "px";
             renderer.domElement.style.left = 0 + "px";
             renderer.domElement.style.position = "absolute";
@@ -447,16 +447,16 @@ class BvhPlayer {
 
             f5.add( BVHanimConfig, 'speed', 0.01, 2 ).onChange( function() { bvhReader.speed = BVHanimConfig.speed; });;
             f5.add( BVHanimConfig, 'size', 1, 10 ).onChange( function() { bvhReader.reScale(BVHanimConfig.size) });
-            f5.add( BVHanimConfig, 'px', -100, 100 ).onChange( function() { positionBVH() });;
-            f5.add( BVHanimConfig, 'py', -100, 100 ).onChange( function() { positionBVH() });;
-            f5.add( BVHanimConfig, 'pz', -100, 100 ).onChange( function() { positionBVH() });;
+            // f5.add( BVHanimConfig, 'px', -100, 100 ).onChange( function() { positionBVH() });;
+            // f5.add( BVHanimConfig, 'py', -100, 100 ).onChange( function() { positionBVH() });;
+            // f5.add( BVHanimConfig, 'pz', -100, 100 ).onChange( function() { positionBVH() });;
             f5.add( BVHanimConfig, 'boneSize', 0.1, 5 ).onChange( function() { bvhReader.boneSize = BVHanimConfig.boneSize; });
             f5.open();
         }
 
-        function positionBVH() {
-            bvhReader.rePosition(new THREE.Vector3( BVHanimConfig.px || 0, BVHanimConfig.py|| 0, BVHanimConfig.pz|| 0 ))
-        }
+        // function positionBVH() {
+        //     bvhReader.rePosition(new THREE.Vector3( BVHanimConfig.px || 0, BVHanimConfig.py|| 0, BVHanimConfig.pz|| 0 ))
+        // }
 
         function updateBVH() {
             if(bvhReader !== null && bvhReader.play){
@@ -531,7 +531,7 @@ class BvhPlayer {
 
         function addGUI() {
             gui = new dat.GUI({autoPlace:false, width:204});
-            document.getElementById('gui').appendChild(gui.domElement);
+            document.getElementById('gui')?.appendChild(gui.domElement);
         }
 
         function tell(s){
@@ -616,7 +616,7 @@ class BvhPlayer {
 
             // loadBVH("action.png");
 
-            initBVHGui(bvhReader);
+            // initBVHGui(bvhReader);
         }
 
         // fit a rect into some container, keeping the aspect ratio of the rect
@@ -675,8 +675,14 @@ class BvhPlayer {
          * @param event {Event}
          * @param bvhReaderId {string}
          * @param color {string}
+         * @param resetPosition {THREE.Vector3}
          */
-        function handleBvhFileInput(event, bvhReaderId, color) {
+        function handleBvhFileInput(
+            event,
+            bvhReaderId,
+            color,
+            resetPosition
+        ) {
             color = color.slice(0, 7)
             const files = event.target.files;
             if (!files) return;
@@ -686,7 +692,7 @@ class BvhPlayer {
                 const material = new THREE.MeshLambertMaterial({ color }, color);
                 // const material = new THREE.MeshPhongMaterial({color})
                 reader.onload = function(e) {
-                    const bvhReader = new BVHReader(scene, material);
+                    const bvhReader = new BVHReader(scene, material, resetPosition);
                     initBVH(bvhReader)
                     bvhReader.parseData(e.target.result.split(/\s+/g));
                     bvhPlayer.addAnimatable(bvhReaderId, bvhReader);
@@ -746,6 +752,11 @@ class BvhPlayer {
             annotationButtons.first().trigger('click');
         }
 
+        const resetPositions = [
+            new THREE.Vector3(40, BVHanimConfig.py, 0),
+            new THREE.Vector3(0, BVHanimConfig.py, 0),
+            new THREE.Vector3(-40, BVHanimConfig.py, 0),
+        ]
         /**
          * @param id {number}
          * @returns {Window.jQuery|HTMLElement|*}
@@ -766,7 +777,8 @@ class BvhPlayer {
                 .on("change", function(e) {
                     const motionColor = motionColours[id];
                     const bvhReaderId = `bvhReader-${id}`
-                    handleBvhFileInput(e, bvhReaderId, motionColor)
+                    const resetPosition = resetPositions[id]
+                    handleBvhFileInput(e, bvhReaderId, motionColor, resetPosition)
                 })
             newAnnotationContainer
                 .find(`#${annotationInputId}`)
